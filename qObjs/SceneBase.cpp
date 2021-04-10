@@ -44,7 +44,7 @@ SceneBase::SceneBase(QPolygonF polygonFIn, QObject *parent)
           }())
 {}
 
-SceneBase::SceneBase(QJsonObject const & jsonObject, QObject *parent)
+SceneBase::SceneBase(QJsonObject const &jsonObject, QObject *parent)
     : SceneBase(
           [&jsonObject]() { return deserializePolygonF(jsonObject[TO_LITERAL_STRING(_borderPolygon)].toArray()); }(), parent)
 {
@@ -76,8 +76,14 @@ QJsonArray SceneBase::serialize(const QPolygonF &polygonF)
 }
 QJsonArray SceneBase::serialize(QRectF const rectF)
 {
-  qDebug() << "serial rect" << rectF << '\n';
   return QJsonArray() << rectF.x() << rectF.y() << rectF.width() << rectF.height();
+}
+QString SceneBase::serialize(QColor const color)
+{
+  QByteArray buffer;
+  QDataStream stream(&buffer, QIODevice::WriteOnly);
+  stream << color;
+  return std::move(buffer);
 }
 
 QPointF SceneBase::deserializePointF(const QJsonArray &array)
@@ -93,6 +99,13 @@ QPolygonF SceneBase::deserializePolygonF(const QJsonArray &array)
 }
 QRectF SceneBase::deserializeRectF(const QJsonArray &array)
 {
-  qDebug() << "DeSerial rect" <<QRectF(array[0].toDouble(), array[1].toDouble(), array[2].toDouble(), array[3].toDouble()) << '\n';
   return QRectF(array[0].toDouble(), array[1].toDouble(), array[2].toDouble(), array[3].toDouble());
+}
+QColor SceneBase::deserializeColor(const QString & str)
+{
+  QColor color;
+  QByteArray buffer(str.toUtf8());
+  QDataStream stream(&buffer, QIODevice::ReadOnly);
+  stream >> color;
+  return std::move(color);
 }

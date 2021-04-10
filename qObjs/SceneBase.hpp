@@ -22,10 +22,12 @@ protected:
   static QJsonArray serialize(QPointF);
   static QJsonArray serialize(const QPolygonF &);
   static QJsonArray serialize(QRectF);
+  static QString serialize(QColor);
 
   static QPointF deserializePointF(QJsonArray const &);
   static QPolygonF deserializePolygonF(QJsonArray const &);
   static QRectF deserializeRectF(QJsonArray const &);
+  static QColor deserializeColor(const QString &);
 
 private:
   QPolygonF _borderPolygon;

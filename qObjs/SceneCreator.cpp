@@ -132,7 +132,7 @@ SceneCreator::SceneCreator(const QJsonObject &serial, QObject *parent)
 
   for (size_t i{}; i < userShapesPacked.size(); ++i)
     for (auto shape : userShapesPacked[i].toArray()) {
-      auto const path(DrawingPath::deserialize(shape.toArray()));
+      auto const path(DrawingPath::deserialize(shape.toObject()));
       _figuresUser[i].emplace_back(path, drawingFigureMethods[i](QRectF(path.begin, path.end)));
     }
 }
@@ -189,7 +189,7 @@ void SceneCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
   if (figureSelector != -1 && drawingProcess) {
     assert(*drawingProcess);
     _figuresUser[figureSelector].emplace_back(
-        DrawingPath{ drawingProcess->begin(), drawingProcess->end() }, drawingProcess->release());
+        DrawingPath{ drawingProcess->begin(), drawingProcess->end(), colorFigure }, drawingProcess->release());
     drawingProcess.reset();
   }
   QGraphicsScene::mouseReleaseEvent(event);
@@ -216,12 +216,19 @@ decltype(SceneCreator::drawingFigureMethods) SceneCreator::drawingFigureMethodsD
            } };
 }
 
-QJsonArray SceneCreator::DrawingPath::serialize() const
+QJsonObject SceneCreator::DrawingPath::serialize() const
 {
-  return QJsonArray() << SceneBase::serialize(begin) << SceneBase::serialize(end);
+  QJsonObject json;
+  json["pos"]  = QJsonArray() << SceneBase::serialize(begin) << SceneBase::serialize(end);
+  json["color"]= SceneBase::serialize(color);
+  return std::move(json);
 }
-SceneCreator::DrawingPath SceneCreator::DrawingPath::deserialize(const QJsonArray &array)
+SceneCreator::DrawingPath SceneCreator::DrawingPath::deserialize(const QJsonObject &json)
 {
-  return SceneCreator::DrawingPath{ SceneBase::deserializePointF(array[0].toArray()),
-                                    SceneBase::deserializePointF(array[1].toArray()) };
+  DrawingPath ret;
+  ret.color      = SceneBase::deserializeColor(json["color"].toString());
+  auto const path= json["pos"].toArray();
+  ret.begin      = SceneBase::deserializePointF(path[0].toArray());
+  ret.end        = SceneBase::deserializePointF(path[1].toArray());
+  return std::move(ret);
 }

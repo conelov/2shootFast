@@ -13,9 +13,10 @@ class SceneCreator: public SceneBase {
 
   struct DrawingPath{
     QPointF begin, end;
+    QColor color;
 
-    [[nodiscard]] QJsonArray serialize() const;
-    static DrawingPath deserialize(QJsonArray const &);
+    [[nodiscard]] QJsonObject serialize() const;
+    static DrawingPath deserialize(const QJsonObject &json);
   };
   class DrawingProcess;
   class CollidingIgnore;
@@ -41,7 +42,6 @@ private:
   std::array<std::function<QGraphicsItem *(const QRectF &rect)>, 3> drawingFigureMethods;
   decltype(drawingFigureMethods) drawingFigureMethodsDefault();
 
-  //  std::vector<std::pair<size_t, QGraphicsItem *>> _figuresUser;
   std::vector<std::pair<DrawingPath, QGraphicsItem *>> _figuresUser[3];
 
   template<typename... Args>
