@@ -16,13 +16,13 @@
 #define TO_LITERAL_STRING(in) #in
 
 const SceneCreator::DrawingFigureMethods SceneCreator::drawingFigureMethods[3]= {
-  [](QGraphicsScene *const scene, QRectF const rectF, QColor const color) -> QGraphicsItem * {
+  [](QGraphicsScene *const scene, QRectF const rectF, QColor const &color) -> QGraphicsItem * {
     return scene->addEllipse(rectF, color, color);
   },
-  [](QGraphicsScene *const scene, QRectF const rectF, QColor const color) -> QGraphicsItem * {
+  [](QGraphicsScene *const scene, QRectF const rectF, QColor const &color) -> QGraphicsItem * {
     return scene->addPolygon(QPolygonF(rectF), color, color);
   },
-  [](QGraphicsScene *const scene, QRectF const rect, QColor const color) -> QGraphicsItem *
+  [](QGraphicsScene *const scene, QRectF const rect, QColor const &color) -> QGraphicsItem *
   {
     QPen pen(color);
     pen.setWidth(4);
@@ -130,8 +130,7 @@ public:
   }
 };
 
-SceneCreator::~SceneCreator()
-{}
+SceneCreator::~SceneCreator()= default;
 
 SceneCreator::SceneCreator(QPolygonF polygonFIn, QObject *parent)
     : SceneBase(std::move(polygonFIn), parent)
@@ -156,7 +155,7 @@ QJsonObject SceneCreator::serialize() const
   constexpr auto methodsCount= sizeof(drawingFigureMethods) / sizeof(drawingFigureMethods[0]);
   QJsonArray userShapes[methodsCount];
   for (size_t i{}; i < methodsCount; ++i)
-    for (auto const figure : _figuresUser[i])
+    for (auto const &figure : _figuresUser[i])
       userShapes[i].push_back(figure.first.serialize());
 
   QJsonArray userShapesPacked;

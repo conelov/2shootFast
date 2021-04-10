@@ -41,7 +41,7 @@ public:
 private:
   int figureSelector= -1;
   std::unique_ptr<DrawingProcess> drawingProcess;
-  using DrawingFigureMethods= QGraphicsItem* (*)(QGraphicsScene*, QRectF, QColor);
+  using DrawingFigureMethods= QGraphicsItem *(*)(QGraphicsScene *, QRectF, QColor const &);
   static const DrawingFigureMethods drawingFigureMethods[3];
 
   std::vector<std::pair<DrawingPath, QGraphicsItem *>> _figuresUser[3];

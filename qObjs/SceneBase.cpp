@@ -25,8 +25,7 @@ SceneBase::GraphicsItemDeleter::GraphicsItemDeleter(QGraphicsScene *sceneIn)
     : scene(sceneIn)
 {}
 
-SceneBase::~SceneBase()
-{}
+SceneBase::~SceneBase()= default;
 
 SceneBase::SceneBase(QPolygonF polygonFIn, QObject *parent)
     : QGraphicsScene(parent)
@@ -78,9 +77,9 @@ QJsonArray SceneBase::serialize(QRectF const rectF)
 {
   return QJsonArray() << rectF.x() << rectF.y() << rectF.width() << rectF.height();
 }
-QString SceneBase::serialize(QColor const color)
+QString SceneBase::serialize(QColor const &color)
 {
-  return  color.operator QVariant().toByteArray();
+  return color.operator QVariant().toByteArray();
 }
 
 QPointF SceneBase::deserializePointF(const QJsonArray &array)
@@ -98,7 +97,7 @@ QRectF SceneBase::deserializeRectF(const QJsonArray &array)
 {
   return QRectF(array[0].toDouble(), array[1].toDouble(), array[2].toDouble(), array[3].toDouble());
 }
-QColor SceneBase::deserializeColor(const QString & str)
+QColor SceneBase::deserializeColor(const QString &str)
 {
-  return  QVariant( str.toUtf8()).value<QColor>();
+  return QVariant(str.toUtf8()).value<QColor>();
 }

@@ -5,16 +5,13 @@
 #include "FormMain.hpp"
 #include "ui_FormMain.h"
 
-FormMain::~FormMain()
-{
-}
+FormMain::~FormMain()= default;
 
 FormMain::FormMain(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
     , ui(new Ui::FormMain)
 {
   ui->setupUi(this);
-
 
   resize(800, 600);
 }

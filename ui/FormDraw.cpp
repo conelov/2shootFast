@@ -42,9 +42,9 @@ public:
     scene.reset(sceneIn);
 
     form->ui->graphicsView->setScene(scene.get());
-    scene->setObjectName(form-> ui->lineEdit_title->text());
-    scene->colorFigure=form->colorFigure;
-    QObject::connect(form-> ui->figuresPanel, &FiguresPanel::figureChange, scene.get(), &SceneCreator::setDrawingFigureId);
+    scene->setObjectName(form->ui->lineEdit_title->text());
+    scene->colorFigure= form->colorFigure;
+    QObject::connect(form->ui->figuresPanel, &FiguresPanel::figureChange, scene.get(), &SceneCreator::setDrawingFigureId);
 
     return operator SceneCreator *();
   }

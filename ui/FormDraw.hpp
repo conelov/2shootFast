@@ -6,11 +6,12 @@
 #define INC_2SHOOT_FORMDRAW_HPP
 #include <QWidget>
 
-namespace Ui{
+namespace Ui
+{
 class FormDraw;
 }
 
-class FormDraw final : public QWidget{
+class FormDraw final: public QWidget {
   Q_OBJECT
   class SceneManager;
 
@@ -20,7 +21,7 @@ class FormDraw final : public QWidget{
 
 public:
   ~FormDraw() override;
-  FormDraw(QWidget *parent = {}, Qt::WindowFlags f = {});
+  FormDraw(QWidget *parent= {}, Qt::WindowFlags f= {});
 
 private:
 };

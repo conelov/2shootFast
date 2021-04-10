@@ -14,11 +14,10 @@ class FormMain;
 class FormMain final: public QMainWindow {
   Q_OBJECT
   QScopedPointer<Ui::FormMain> ui;
+
 public:
   ~FormMain() override;
   FormMain(QWidget *parent= {}, Qt::WindowFlags flags= {});
-
-
 };
 
 #endif // INC_2SHOOT_FORMMAIN_HPP

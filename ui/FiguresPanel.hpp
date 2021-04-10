@@ -20,8 +20,7 @@ class FiguresPanel final: public QWidget {
 public:
   ~FiguresPanel() override;
   FiguresPanel(QWidget *parent= {}, Qt::WindowFlags f= {});
-  FiguresPanel(
-      QColor const &colorIcon={}, QWidget *parent= {}, Qt::WindowFlags f= {});
+  FiguresPanel(QColor const &colorIcon= {}, QWidget *parent= {}, Qt::WindowFlags f= {});
 
   [[nodiscard]] int buttonFigurePressedId() const;
   Q_SIGNAL void figureChange(int);

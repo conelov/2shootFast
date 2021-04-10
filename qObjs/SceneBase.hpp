@@ -22,7 +22,7 @@ protected:
   static QJsonArray serialize(QPointF);
   static QJsonArray serialize(const QPolygonF &);
   static QJsonArray serialize(QRectF);
-  static QString serialize(QColor);
+  static QString serialize(const QColor &);
 
   static QPointF deserializePointF(QJsonArray const &);
   static QPolygonF deserializePolygonF(QJsonArray const &);
@@ -52,7 +52,7 @@ protected:
 public:
   ~SceneBase() override;
   SceneBase(QPolygonF polygonFIn, QObject *parent= {});
-  SceneBase(QJsonObject const & jsonObject, QObject *parent= {});
+  SceneBase(QJsonObject const &jsonObject, QObject *parent= {});
 
   [[nodiscard]] virtual QJsonObject serialize() const;
 };

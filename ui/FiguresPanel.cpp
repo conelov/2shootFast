@@ -22,16 +22,15 @@ QPixmap pixmapFromAlphaMap(QColor const &color, QString const &pathToAMap)
 }
 } // namespace
 
-FiguresPanel::~FiguresPanel()
-{}
+FiguresPanel::~FiguresPanel()= default;
 
 FiguresPanel::FiguresPanel(QWidget *parent, const Qt::WindowFlags f)
     : FiguresPanel({}, parent, f)
 {}
 
-FiguresPanel::FiguresPanel(
-    const QColor &colorIcon, QWidget *parent, Qt::WindowFlags f)
-    : ui(new Ui::FiguresPanel)
+FiguresPanel::FiguresPanel(const QColor &colorIcon, QWidget *parent, Qt::WindowFlags f)
+    : QWidget(parent, f)
+    , ui(new Ui::FiguresPanel)
 {
   ui->setupUi(this);
   setColorFigure(colorIcon);
@@ -39,16 +38,8 @@ FiguresPanel::FiguresPanel(
   for (auto const button : findChildren<QPushButton *>()) {
     if (!button)
       continue;
-    QObject::connect(
-        button,
-        &QPushButton::clicked,
-        this,
-        &FiguresPanel::guardMultiCheckButton);
-    QObject::connect(
-        button,
-        &QPushButton::clicked,
-        this,
-        [this] { emit figureChange(buttonFigurePressedId()); });
+    QObject::connect(button, &QPushButton::clicked, this, &FiguresPanel::guardMultiCheckButton);
+    QObject::connect(button, &QPushButton::clicked, this, [this] { emit figureChange(buttonFigurePressedId()); });
   }
 }
 
@@ -57,8 +48,7 @@ int FiguresPanel::buttonFigurePressedId() const
   if (!buttonFigureCurrentPressed)
     return -1;
   auto const listButton= findChildren<QPushButton *>();
-  auto const currBIt   = std::find(
-      listButton.cbegin(), listButton.cend(), buttonFigureCurrentPressed);
+  auto const currBIt   = std::find(listButton.cbegin(), listButton.cend(), buttonFigureCurrentPressed);
   assert(currBIt != listButton.cend());
   return std::distance(listButton.cbegin(), currBIt);
 }
@@ -78,12 +68,10 @@ void FiguresPanel::guardMultiCheckButton()
 
 void FiguresPanel::setColorFigure(const QColor &color)
 {
-  ui->pushButton_circle->setIcon(
-      pixmapFromAlphaMap(color, ":/res/img/circle.png"));
+  ui->pushButton_circle->setIcon(pixmapFromAlphaMap(color, ":/res/img/circle.png"));
   ui->pushButton_circle->setIconSize({ 32, 32 });
 
-  ui->pushButton_square->setIcon(
-      pixmapFromAlphaMap(color, ":/res/img/square.png"));
+  ui->pushButton_square->setIcon(pixmapFromAlphaMap(color, ":/res/img/square.png"));
   ui->pushButton_square->setIconSize({ 32, 32 });
 
   ui->pushButton_line->setIcon(pixmapFromAlphaMap(color, ":/res/img/line.png"));
