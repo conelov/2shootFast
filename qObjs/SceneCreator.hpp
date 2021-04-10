@@ -35,6 +35,7 @@ private:
    decltype(drawingFigureMethods) drawingFigureMethodsDefault();
 
   std::vector<std::pair<size_t, QGraphicsItem *>> _figuresUser;
+//  std::vector<std::pair<std::pair<QRectF, QRectF>,QGraphicsItem>
 
   class CollidingIgnore;
   template<typename... Args>

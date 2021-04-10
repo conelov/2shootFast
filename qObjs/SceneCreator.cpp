@@ -7,6 +7,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <memory>
 #include <utility>
 
 #ifdef TO_LITERAL_STRING
@@ -49,18 +50,62 @@ public:
 };
 
 class SceneCreator::DrawingProcessControl {
-  QPointF _begin;
+  QPointF const _begin;
+  QPointF _end;
+  std::unique_ptr<QGraphicsItem, SceneBase::GraphicsItemDeleter> _figure;
 
 public:
-  std::unique_ptr<QGraphicsItem, SceneBase::GraphicsItemDeleter> figure;
-
+  DrawingProcessControl()                             = delete;
+  DrawingProcessControl(DrawingProcessControl const &)= delete;
+  DrawingProcessControl &operator=(DrawingProcessControl const &)= delete;
+  DrawingProcessControl(DrawingProcessControl &&other) noexcept
+      : _begin(other._begin)
+      , _end(other._end)
+      , _figure(std::move(other._figure))
+  {}
+  DrawingProcessControl &operator=(DrawingProcessControl &&other) noexcept
+  {
+    assert(_begin == other._begin);
+    _end   = other._end;
+    _figure= std::move(other._figure);
+    return *this;
+  };
   DrawingProcessControl(QPointF in, QGraphicsScene *scene)
       : _begin(in)
-      , figure(nullptr, scene)
+      , _end(_begin)
+      , _figure(nullptr, scene)
   {}
-  QPointF begin()
+
+  QGraphicsItem *release()
+  {
+    return _figure.release();
+  }
+
+  void set(QGraphicsItem *const figure, QPointF const end)
+  {
+    assert(!_figure);
+    _figure.reset(figure);
+    _end= end;
+  }
+
+  [[nodiscard]] QGraphicsItem *figure() const
+  {
+    return _figure.get();
+  }
+
+  void setFigure(QGraphicsItem *figure, QPointF end)
+  {
+    _figure.reset(figure);
+    _end= end;
+  }
+
+  [[nodiscard]] QPointF begin() const
   {
     return _begin;
+  }
+
+  [[nodiscard]] operator bool () const {
+    return _figure.operator bool();
   }
 };
 
@@ -89,7 +134,7 @@ void SceneCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
   if (figureSelector != -1) {
     assert(!drawingProcessControl);
     if (SceneBase::contains(event->scenePos())) {
-      drawingProcessControl.reset(new DrawingProcessControl(event->scenePos(), this));
+      drawingProcessControl = std::make_unique<DrawingProcessControl>(event->scenePos(), this);
     }
   }
   QGraphicsScene::mousePressEvent(event);
@@ -98,14 +143,15 @@ void SceneCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void SceneCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
   if (figureSelector != -1 && drawingProcessControl) {
-    auto oldFigure= std::move(drawingProcessControl->figure);
-    drawingProcessControl->figure.reset(
-        drawingFigureMethods[figureSelector]({ drawingProcessControl->begin(), event->scenePos() }));
+    auto oldFigure(std::move(*drawingProcessControl));
+
+    drawingProcessControl->set(
+        drawingFigureMethods[figureSelector]({ drawingProcessControl->begin(), event->scenePos() }), event->scenePos());
     {
-      auto raii(collidingIgnore(oldFigure.get()));
-      if (!collidingItems(drawingProcessControl->figure.get()).isEmpty()) {
-        raii.remove(oldFigure.get());
-        drawingProcessControl->figure= std::move(oldFigure);
+      auto raii(collidingIgnore(oldFigure.figure()));
+      if (!collidingItems(drawingProcessControl->figure()).isEmpty()) {
+        raii.remove(oldFigure.figure());
+        *drawingProcessControl= std::move(oldFigure);
         qDebug() << "colliding";
       }
     }
@@ -116,8 +162,8 @@ void SceneCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void SceneCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
   if (figureSelector != -1 && drawingProcessControl) {
-    assert(drawingProcessControl->figure);
-    _figuresUser.emplace_back(figureSelector, drawingProcessControl->figure.release());
+    assert(*drawingProcessControl);
+    _figuresUser.emplace_back(figureSelector, drawingProcessControl->release());
     drawingProcessControl.reset();
   }
   QGraphicsScene::mouseReleaseEvent(event);
