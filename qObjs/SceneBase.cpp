@@ -80,10 +80,7 @@ QJsonArray SceneBase::serialize(QRectF const rectF)
 }
 QString SceneBase::serialize(QColor const color)
 {
-  QByteArray buffer;
-  QDataStream stream(&buffer, QIODevice::WriteOnly);
-  stream << color;
-  return std::move(buffer);
+  return  color.operator QVariant().toByteArray();
 }
 
 QPointF SceneBase::deserializePointF(const QJsonArray &array)
@@ -103,9 +100,5 @@ QRectF SceneBase::deserializeRectF(const QJsonArray &array)
 }
 QColor SceneBase::deserializeColor(const QString & str)
 {
-  QColor color;
-  QByteArray buffer(str.toUtf8());
-  QDataStream stream(&buffer, QIODevice::ReadOnly);
-  stream >> color;
-  return std::move(color);
+  return  QVariant( str.toUtf8()).value<QColor>();
 }

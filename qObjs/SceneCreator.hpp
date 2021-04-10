@@ -11,7 +11,8 @@ class QGraphicsLineItem;
 class SceneCreator: public SceneBase {
   Q_OBJECT
 
-  struct DrawingPath{
+  struct DrawingPath
+  {
     QPointF begin, end;
     QColor color;
 
@@ -20,6 +21,7 @@ class SceneCreator: public SceneBase {
   };
   class DrawingProcess;
   class CollidingIgnore;
+
 public:
   QColor colorFigure{};
 
@@ -39,8 +41,8 @@ public:
 private:
   int figureSelector= -1;
   std::unique_ptr<DrawingProcess> drawingProcess;
-  std::array<std::function<QGraphicsItem *(const QRectF &rect)>, 3> drawingFigureMethods;
-  decltype(drawingFigureMethods) drawingFigureMethodsDefault();
+  using DrawingFigureMethods= QGraphicsItem* (*)(QGraphicsScene*, QRectF, QColor);
+  static const DrawingFigureMethods drawingFigureMethods[3];
 
   std::vector<std::pair<DrawingPath, QGraphicsItem *>> _figuresUser[3];
 

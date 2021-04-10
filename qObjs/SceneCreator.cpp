@@ -15,6 +15,21 @@
 #endif
 #define TO_LITERAL_STRING(in) #in
 
+const SceneCreator::DrawingFigureMethods SceneCreator::drawingFigureMethods[3]= {
+  [](QGraphicsScene *const scene, QRectF const rectF, QColor const color) -> QGraphicsItem * {
+    return scene->addEllipse(rectF, color, color);
+  },
+  [](QGraphicsScene *const scene, QRectF const rectF, QColor const color) -> QGraphicsItem * {
+    return scene->addPolygon(QPolygonF(rectF), color, color);
+  },
+  [](QGraphicsScene *const scene, QRectF const rect, QColor const color) -> QGraphicsItem *
+  {
+    QPen pen(color);
+    pen.setWidth(4);
+    return scene->addLine(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), pen);
+  }
+};
+
 class SceneCreator::CollidingIgnore {
   QGraphicsScene *scene;
   std::vector<QGraphicsItem *> items;
@@ -120,12 +135,10 @@ SceneCreator::~SceneCreator()
 
 SceneCreator::SceneCreator(QPolygonF polygonFIn, QObject *parent)
     : SceneBase(std::move(polygonFIn), parent)
-    , drawingFigureMethods{ drawingFigureMethodsDefault() }
 {}
 
 SceneCreator::SceneCreator(const QJsonObject &serial, QObject *parent)
     : SceneBase(serial, parent)
-    , drawingFigureMethods{ drawingFigureMethodsDefault() }
 {
   auto userShapesPacked(serial[TO_LITERAL_STRING(_figuresUser)].toArray());
   assert(userShapesPacked.size() == sizeof(drawingFigureMethods) / sizeof(drawingFigureMethods[0]));
@@ -133,7 +146,8 @@ SceneCreator::SceneCreator(const QJsonObject &serial, QObject *parent)
   for (size_t i{}; i < userShapesPacked.size(); ++i)
     for (auto shape : userShapesPacked[i].toArray()) {
       auto const path(DrawingPath::deserialize(shape.toObject()));
-      _figuresUser[i].emplace_back(path, drawingFigureMethods[i](QRectF(path.begin, path.end)));
+      assert(path.color != colorFigure);
+      _figuresUser[i].emplace_back(path, drawingFigureMethods[i](this, QRectF(path.begin, path.end), path.color));
     }
 }
 
@@ -171,14 +185,14 @@ void SceneCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
   if (figureSelector != -1 && drawingProcess) {
     auto oldFigure(std::move(*drawingProcess));
 
-    drawingProcess->set(drawingFigureMethods[figureSelector]({ drawingProcess->begin(), event->scenePos() }), event->scenePos());
-    {
-      auto raii(collidingIgnore(oldFigure.figure()));
-      if (!collidingItems(drawingProcess->figure()).isEmpty()) {
-        raii.remove(oldFigure.figure());
-        *drawingProcess= std::move(oldFigure);
-        qDebug() << "colliding";
-      }
+    drawingProcess->set(
+        drawingFigureMethods[figureSelector](this, { drawingProcess->begin(), event->scenePos() }, colorFigure),
+        event->scenePos());
+    auto raii(collidingIgnore(oldFigure.figure()));
+    if (!collidingItems(drawingProcess->figure()).isEmpty()) {
+      raii.remove(oldFigure.figure());
+      *drawingProcess= std::move(oldFigure);
+      qDebug() << "colliding";
     }
   }
   QGraphicsScene::mouseMoveEvent(event);
@@ -202,18 +216,6 @@ SceneCreator::CollidingIgnore SceneCreator::collidingIgnore(Args &&...args)
 
   (raii.add(std::forward<Args>(args)), ...);
   return std::move(raii);
-}
-
-decltype(SceneCreator::drawingFigureMethods) SceneCreator::drawingFigureMethodsDefault()
-{
-  return { [this](const QRectF &rect) -> QGraphicsItem * { return addEllipse(rect, colorFigure, colorFigure); },
-           [this](const QRectF &rect) -> QGraphicsItem * { return addPolygon(QPolygonF(rect), colorFigure, colorFigure); },
-           [this](const QRectF &rect) -> QGraphicsItem *
-           {
-             QPen pen(colorFigure);
-             pen.setWidth(4);
-             return addLine(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), pen);
-           } };
 }
 
 QJsonObject SceneCreator::DrawingPath::serialize() const
