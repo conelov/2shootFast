@@ -11,6 +11,14 @@ class QGraphicsLineItem;
 class SceneCreator: public SceneBase {
   Q_OBJECT
 
+  struct DrawingPath{
+    QPointF begin, end;
+
+    [[nodiscard]] QJsonArray serialize() const;
+    static DrawingPath deserialize(QJsonArray const &);
+  };
+  class DrawingProcess;
+  class CollidingIgnore;
 public:
   QColor colorFigure{};
 
@@ -29,15 +37,13 @@ public:
 
 private:
   int figureSelector= -1;
-  class DrawingProcessControl;
-  std::unique_ptr<DrawingProcessControl> drawingProcessControl;
+  std::unique_ptr<DrawingProcess> drawingProcess;
   std::array<std::function<QGraphicsItem *(const QRectF &rect)>, 3> drawingFigureMethods;
-   decltype(drawingFigureMethods) drawingFigureMethodsDefault();
+  decltype(drawingFigureMethods) drawingFigureMethodsDefault();
 
-  std::vector<std::pair<size_t, QGraphicsItem *>> _figuresUser;
-//  std::vector<std::pair<std::pair<QRectF, QRectF>,QGraphicsItem>
+  //  std::vector<std::pair<size_t, QGraphicsItem *>> _figuresUser;
+  std::vector<std::pair<DrawingPath, QGraphicsItem *>> _figuresUser[3];
 
-  class CollidingIgnore;
   template<typename... Args>
   CollidingIgnore collidingIgnore(Args &&...args);
 

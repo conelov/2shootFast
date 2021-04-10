@@ -49,28 +49,28 @@ public:
   }
 };
 
-class SceneCreator::DrawingProcessControl {
+class SceneCreator::DrawingProcess {
   QPointF const _begin;
   QPointF _end;
   std::unique_ptr<QGraphicsItem, SceneBase::GraphicsItemDeleter> _figure;
 
 public:
-  DrawingProcessControl()                             = delete;
-  DrawingProcessControl(DrawingProcessControl const &)= delete;
-  DrawingProcessControl &operator=(DrawingProcessControl const &)= delete;
-  DrawingProcessControl(DrawingProcessControl &&other) noexcept
+  DrawingProcess()                      = delete;
+  DrawingProcess(DrawingProcess const &)= delete;
+  DrawingProcess &operator=(DrawingProcess const &)= delete;
+  DrawingProcess(DrawingProcess &&other) noexcept
       : _begin(other._begin)
       , _end(other._end)
       , _figure(std::move(other._figure))
   {}
-  DrawingProcessControl &operator=(DrawingProcessControl &&other) noexcept
+  DrawingProcess &operator=(DrawingProcess &&other) noexcept
   {
     assert(_begin == other._begin);
     _end   = other._end;
     _figure= std::move(other._figure);
     return *this;
   };
-  DrawingProcessControl(QPointF in, QGraphicsScene *scene)
+  DrawingProcess(QPointF in, QGraphicsScene *scene)
       : _begin(in)
       , _end(_begin)
       , _figure(nullptr, scene)
@@ -104,7 +104,13 @@ public:
     return _begin;
   }
 
-  [[nodiscard]] operator bool () const {
+  [[nodiscard]] QPointF end() const
+  {
+    return _end;
+  }
+
+  [[nodiscard]] operator bool() const
+  {
     return _figure.operator bool();
   }
 };
@@ -125,16 +131,36 @@ SceneCreator::SceneCreator(const QJsonObject &serial, QObject *parent)
   assert(userShapesPacked.size() == sizeof(drawingFigureMethods) / sizeof(drawingFigureMethods[0]));
 
   for (size_t i{}; i < userShapesPacked.size(); ++i)
-    for (auto shape : userShapesPacked[i].toArray())
-      _figuresUser.emplace_back(i, drawingFigureMethods[i](SceneBase::deserializeRectF(shape.toArray())));
+    for (auto shape : userShapesPacked[i].toArray()) {
+      auto const path(DrawingPath::deserialize(shape.toArray()));
+      _figuresUser[i].emplace_back(path, drawingFigureMethods[i](QRectF(path.begin, path.end)));
+    }
+}
+
+QJsonObject SceneCreator::serialize() const
+{
+  constexpr auto methodsCount= sizeof(drawingFigureMethods) / sizeof(drawingFigureMethods[0]);
+  QJsonArray userShapes[methodsCount];
+  for (size_t i{}; i < methodsCount; ++i)
+    for (auto const figure : _figuresUser[i])
+      userShapes[i].push_back(figure.first.serialize());
+
+  QJsonArray userShapesPacked;
+  for (auto &shapes : userShapes)
+    userShapesPacked.push_back(std::move(shapes));
+
+  auto serial(SceneBase::serialize());
+  serial[TO_LITERAL_STRING(_figuresUser)]= std::move(userShapesPacked);
+
+  return std::move(serial);
 }
 
 void SceneCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
   if (figureSelector != -1) {
-    assert(!drawingProcessControl);
+    assert(!drawingProcess);
     if (SceneBase::contains(event->scenePos())) {
-      drawingProcessControl = std::make_unique<DrawingProcessControl>(event->scenePos(), this);
+      drawingProcess= std::make_unique<DrawingProcess>(event->scenePos(), this);
     }
   }
   QGraphicsScene::mousePressEvent(event);
@@ -142,16 +168,15 @@ void SceneCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void SceneCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-  if (figureSelector != -1 && drawingProcessControl) {
-    auto oldFigure(std::move(*drawingProcessControl));
+  if (figureSelector != -1 && drawingProcess) {
+    auto oldFigure(std::move(*drawingProcess));
 
-    drawingProcessControl->set(
-        drawingFigureMethods[figureSelector]({ drawingProcessControl->begin(), event->scenePos() }), event->scenePos());
+    drawingProcess->set(drawingFigureMethods[figureSelector]({ drawingProcess->begin(), event->scenePos() }), event->scenePos());
     {
       auto raii(collidingIgnore(oldFigure.figure()));
-      if (!collidingItems(drawingProcessControl->figure()).isEmpty()) {
+      if (!collidingItems(drawingProcess->figure()).isEmpty()) {
         raii.remove(oldFigure.figure());
-        *drawingProcessControl= std::move(oldFigure);
+        *drawingProcess= std::move(oldFigure);
         qDebug() << "colliding";
       }
     }
@@ -161,10 +186,11 @@ void SceneCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void SceneCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-  if (figureSelector != -1 && drawingProcessControl) {
-    assert(*drawingProcessControl);
-    _figuresUser.emplace_back(figureSelector, drawingProcessControl->release());
-    drawingProcessControl.reset();
+  if (figureSelector != -1 && drawingProcess) {
+    assert(*drawingProcess);
+    _figuresUser[figureSelector].emplace_back(
+        DrawingPath{ drawingProcess->begin(), drawingProcess->end() }, drawingProcess->release());
+    drawingProcess.reset();
   }
   QGraphicsScene::mouseReleaseEvent(event);
 }
@@ -178,22 +204,6 @@ SceneCreator::CollidingIgnore SceneCreator::collidingIgnore(Args &&...args)
   return std::move(raii);
 }
 
-QJsonObject SceneCreator::serialize() const
-{
-  QJsonArray userShapes[sizeof(drawingFigureMethods) / sizeof(drawingFigureMethods[0])];
-  for (auto figure : _figuresUser)
-    userShapes[figure.first].push_back(SceneBase::serialize(figure.second->sceneBoundingRect()));
-
-  QJsonArray userShapesPacked;
-  for (auto &shapes : userShapes)
-    userShapesPacked.push_back(std::move(shapes));
-
-  auto serial(SceneBase::serialize());
-  serial[TO_LITERAL_STRING(_figuresUser)]= std::move(userShapesPacked);
-
-  return std::move(serial);
-}
-
 decltype(SceneCreator::drawingFigureMethods) SceneCreator::drawingFigureMethodsDefault()
 {
   return { [this](const QRectF &rect) -> QGraphicsItem * { return addEllipse(rect, colorFigure, colorFigure); },
@@ -204,4 +214,14 @@ decltype(SceneCreator::drawingFigureMethods) SceneCreator::drawingFigureMethodsD
              pen.setWidth(4);
              return addLine(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), pen);
            } };
+}
+
+QJsonArray SceneCreator::DrawingPath::serialize() const
+{
+  return QJsonArray() << SceneBase::serialize(begin) << SceneBase::serialize(end);
+}
+SceneCreator::DrawingPath SceneCreator::DrawingPath::deserialize(const QJsonArray &array)
+{
+  return SceneCreator::DrawingPath{ SceneBase::deserializePointF(array[0].toArray()),
+                                    SceneBase::deserializePointF(array[1].toArray()) };
 }
