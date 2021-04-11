@@ -108,6 +108,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButton_sceneNew">
+       <property name="text">
+        <string>Новая</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pushButton_sceneSave">
        <property name="text">
         <string>Сохранить</string>
@@ -118,6 +125,13 @@
       <widget class="QPushButton" name="pushButton_sceneLoad">
        <property name="text">
         <string>Загрузить</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
       </widget>
      </item>

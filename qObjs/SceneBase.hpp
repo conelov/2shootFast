@@ -7,11 +7,13 @@
 #include <QGraphicsScene>
 #include <memory>
 
+class UserInputBase;
+
 class SceneBase: public QGraphicsScene {
   Q_OBJECT
 
   /// STATIC DEFINE
-protected:
+public:
   class GraphicsItemDeleter {
     QGraphicsScene *scene;
 
@@ -27,23 +29,8 @@ protected:
     [[nodiscard]] QJsonObject serialize() const;
     static DrawingPath deserialize(const QJsonObject &json);
   };
-  class CollidingIgnore{
-    QGraphicsScene *scene;
-    std::vector<QGraphicsItem *> items;
 
-  public:
-    CollidingIgnore()                       = delete;
-    CollidingIgnore(CollidingIgnore const &)= delete;
-    CollidingIgnore &operator=(CollidingIgnore const &)= delete;
-    CollidingIgnore(CollidingIgnore &&)                = default;
-    CollidingIgnore &operator=(CollidingIgnore &&)= default;
-
-    CollidingIgnore(QGraphicsScene *sceneIn);
-    ~CollidingIgnore();
-    CollidingIgnore & add(QGraphicsItem *in);
-    CollidingIgnore & remove(QGraphicsItem *in);
-  };
-
+private:
   static QJsonArray serialize(QPointF);
   static QJsonArray serialize(const QPolygonF &);
   static QJsonArray serialize(QRectF);
@@ -54,16 +41,15 @@ protected:
   static QRectF deserializeRectF(QJsonArray const &);
   static QColor deserializeColor(const QString &);
 
+public:
   /// MEMBER
-private:
+  std::unique_ptr<UserInputBase> _inputHandler;
   QPolygonF _borderPolygon;
   std::vector<std::unique_ptr<QGraphicsLineItem, GraphicsItemDeleter>> _borderLines;
 
-protected:
   std::vector<std::pair<DrawingPath, QGraphicsItem *>> _figuresUser[3];
 
   /// METHODS
-public:
   ~SceneBase() override;
   SceneBase(QPolygonF polygonFIn, QObject *parent= {});
   SceneBase(QJsonObject const &jsonObject, QObject *parent= {});
@@ -71,18 +57,20 @@ public:
   [[nodiscard]] virtual QJsonObject serialize() const;
   virtual void deserialize(QJsonObject const &json);
 
-protected:
   [[nodiscard]] bool contains(QPointF const &pointF, Qt ::FillRule fillRule= Qt::OddEvenFill) const
   {
     return _borderPolygon.containsPoint(pointF, fillRule);
   }
 
-  virtual CollidingIgnore collidingIgnore();
-
 private:
   SceneBase(QObject *parent= {});
 
   void constructBorderLines();
+
+protected:
+  void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+  void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 };
 
 #endif // INC_2SHOOT_SCENEBASE_HPP

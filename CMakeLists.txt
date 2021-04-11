@@ -15,7 +15,7 @@ if (NOT CMAKE_PREFIX_PATH)
 endif ()
 
 add_library(${PROJECT_NAME}_qObjs STATIC
-        qObjs/SceneCreator.hpp qObjs/SceneCreator.cpp qObjs/SceneBase.cpp qObjs/SceneBase.hpp)
+        qObjs/SceneBase.hpp qObjs/SceneBase.cpp)
 set_target_properties(${PROJECT_NAME}_qObjs PROPERTIES
         AUTOMOC ON
         INCLUDE_CURRENT_DIR ON
@@ -24,6 +24,15 @@ target_link_libraries(${PROJECT_NAME}_qObjs PUBLIC
         ${REQUIRED_LIBS_QUALIFIED}
 #        ch
         )
+target_include_directories(${PROJECT_NAME}_qObjs PRIVATE qtDep)
+
+add_library(${PROJECT_NAME}_qtDep STATIC
+        qtDep/UserInputBase.hpp qtDep/UserInputCreator.cpp
+        qtDep/UserInputCreator.hpp qtDep/UserInputBase.cpp)
+target_link_libraries(${PROJECT_NAME}_qtDep PUBLIC
+        ${REQUIRED_LIBS_QUALIFIED}
+        )
+target_include_directories(${PROJECT_NAME}_qtDep PRIVATE qObjs)
 
 add_library(${PROJECT_NAME}_ui STATIC
         ui/FormMain.hpp ui/FormMain.hpp ui/FormMain.cpp
@@ -36,7 +45,7 @@ set_target_properties(${PROJECT_NAME}_ui PROPERTIES
 target_link_libraries(${PROJECT_NAME}_ui PUBLIC
         ${REQUIRED_LIBS_QUALIFIED}
         )
-target_include_directories(${PROJECT_NAME}_ui PRIVATE qObjs ui)
+target_include_directories(${PROJECT_NAME}_ui PRIVATE qObjs ui qtDep)
 
 add_executable(${PROJECT_NAME}_main
         main.cpp
@@ -49,4 +58,5 @@ set_target_properties(${PROJECT_NAME}_main PROPERTIES
 target_link_libraries(${PROJECT_NAME}_main
         ${PROJECT_NAME}_ui
         ${PROJECT_NAME}_qObjs
+        ${PROJECT_NAME}_qtDep
         )

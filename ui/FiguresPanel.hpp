@@ -24,7 +24,7 @@ public:
 
   [[nodiscard]] int buttonFigurePressedId() const;
   Q_SIGNAL void figureChange(int);
-  void setColorFigure(QColor const &color);
+  Q_SLOT void setColorFigure(QColor const &color);
 
 private:
   Q_SLOT void guardMultiCheckButton();

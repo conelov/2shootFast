@@ -5,8 +5,14 @@
 #include "FormMain.hpp"
 #include "ui_FormMain.h"
 
+QSettings FormMain::getGlobalQSetting(){
+#ifdef linux
+return QSettings(QCoreApplication::applicationDirPath() + "/settings.cfg", QSettings::NativeFormat);
+#else
+return QSettings{};
+#endif
+}
 FormMain::~FormMain()= default;
-
 FormMain::FormMain(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
     , ui(new Ui::FormMain)
@@ -15,3 +21,4 @@ FormMain::FormMain(QWidget *parent, Qt::WindowFlags flags)
 
   resize(800, 600);
 }
+

@@ -6,6 +6,7 @@
 #include <QGraphicsPolygonItem>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <UserInputBase.hpp>
 
 #include <QDebug>
 #include <utility>
@@ -40,30 +41,6 @@ void SceneBase::GraphicsItemDeleter::operator()(QGraphicsItem *item) const
 SceneBase::GraphicsItemDeleter::GraphicsItemDeleter(QGraphicsScene *sceneIn)
     : scene(sceneIn)
 {}
-
-SceneBase::CollidingIgnore::CollidingIgnore(QGraphicsScene *sceneIn)
-    : scene(sceneIn)
-{}
-SceneBase::CollidingIgnore::~CollidingIgnore()
-{
-  for (auto ptr : items)
-    scene->addItem(ptr);
-}
-SceneBase::CollidingIgnore &SceneBase::CollidingIgnore::add(QGraphicsItem *in)
-{
-  assert(in);
-  items.push_back(in);
-  scene->removeItem(in);
-  return *this;
-}
-SceneBase::CollidingIgnore &SceneBase::CollidingIgnore::remove(QGraphicsItem *in)
-{
-  assert(in);
-  auto const erCount= std::erase(items, in);
-  scene->addItem(in);
-  assert(erCount == 1);
-  return *this;
-}
 
 QJsonArray SceneBase::serialize(QPointF const pointF)
 {
@@ -141,10 +118,6 @@ void SceneBase::deserialize(QJsonObject const &json)
   _borderPolygon= deserializePolygonF(json[TO_LITERAL_STRING(_borderPolygon)].toArray());
   constructBorderLines();
 }
-SceneBase::CollidingIgnore SceneBase::collidingIgnore()
-{
-  return CollidingIgnore(this);
-}
 void SceneBase::constructBorderLines()
 {
   assert(_borderLines.empty());
@@ -153,4 +126,20 @@ void SceneBase::constructBorderLines()
        prevIt= std::exchange(currIt, std::next(currIt))) {
     _borderLines.emplace_back(addLine(prevIt->x(), prevIt->y(), currIt->x(), currIt->y(), QPen(Qt::black)), this);
   }
+}
+
+void SceneBase::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+  _inputHandler->mousePressEvent(event);
+  QGraphicsScene::mousePressEvent(event);
+}
+void SceneBase::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+  _inputHandler->mouseMoveEvent(event);
+  QGraphicsScene::mouseMoveEvent(event);
+}
+void SceneBase::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+  _inputHandler->mouseReleaseEvent(event);
+  QGraphicsScene::mouseReleaseEvent(event);
 }
