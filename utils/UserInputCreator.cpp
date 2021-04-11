@@ -3,6 +3,7 @@
 //
 
 #include "UserInputCreator.hpp"
+#include <FigureSelectorAdapter.hpp>
 #include <QGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
 #include <Scene.hpp>
@@ -82,7 +83,7 @@ UserInputCreator::UserInputCreator(Scene *scene)
 {}
 void UserInputCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-  if (*figureSelector != -1) {
+  if (*figureSelector) {
     assert(!drawingProcess);
     if (scene->contains(event->scenePos())) {
       drawingProcess= std::make_unique<DrawingProcess>(event->scenePos(), scene);
@@ -91,12 +92,18 @@ void UserInputCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
 }
 void UserInputCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-  if (*figureSelector != -1 && drawingProcess) {
+  if (*figureSelector && drawingProcess) {
     auto oldFigure(std::move(*drawingProcess));
 
-    drawingProcess->set(
-        Scene::drawingFigureMethods[*figureSelector](scene, { drawingProcess->begin(), event->scenePos() }, *colorPainting),
-        event->scenePos());
+    {
+      QGraphicsItem *newFigure;
+      if (figureSelector)
+
+        drawingProcess->set(
+            Scene::drawingFigureMethods[figureSelector->i](scene, { drawingProcess->begin(), event->scenePos() }, *colorPainting),
+            event->scenePos());
+    }
+
     auto raii(collidingIgnore());
     if (oldFigure)
       raii.add(oldFigure.figure());
@@ -112,8 +119,8 @@ void UserInputCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 }
 void UserInputCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-  if (*figureSelector != -1 && drawingProcess) {
-    scene->_figuresUser[*figureSelector].emplace_back(
+  if (*figureSelector && drawingProcess) {
+    scene->_figuresUser[figureSelector->i].emplace_back(
         Scene::DrawingPath{ drawingProcess->begin(), drawingProcess->end(), *colorPainting }, drawingProcess->release());
     drawingProcess.reset();
   }

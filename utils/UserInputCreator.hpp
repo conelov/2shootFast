@@ -11,21 +11,24 @@ class QGraphicsItem;
 class QGraphicsScene;
 class QRectF;
 class QColor;
+class FigureSelectorAdapter;
 
-class UserInputCreator : public UserInputBase{
+class UserInputCreator: public UserInputBase {
 
   /// DEFINE
   class DrawingProcess;
 
   /// MEMBERS
+
 public:
   QColor *colorPainting{};
-  int *figureSelector{};
+  FigureSelectorAdapter *figureSelector{};
 
 private:
   std::unique_ptr<DrawingProcess> drawingProcess;
 
   /// METHODS
+
 public:
   ~UserInputCreator() override;
   UserInputCreator(Scene *scene);

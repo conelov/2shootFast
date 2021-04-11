@@ -6,6 +6,7 @@
 #include <QGraphicsPolygonItem>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <Serialize.hpp>
 #include <UserInputBase.hpp>
 
 #include <QDebug>
@@ -19,10 +20,10 @@
 Scene::DrawingPath Scene::DrawingPath::deserialize(const QJsonObject &json)
 {
   DrawingPath ret;
-  ret.color      = Scene::deserializeColor(json["color"].toString());
+  ret.color      = json::deserializeColor(json["color"].toString());
   auto const path= json["pos"].toArray();
-  ret.begin      = Scene::deserializePointF(path[0].toArray());
-  ret.end        = Scene::deserializePointF(path[1].toArray());
+  ret.begin      = json::deserializePointF(path[0].toArray());
+  ret.end        = json::deserializePointF(path[1].toArray());
   return std::move(ret);
 }
 
@@ -38,8 +39,8 @@ Scene::GraphicsItemDeleter::GraphicsItemDeleter(QGraphicsScene *sceneIn)
 QJsonObject Scene::DrawingPath::serialize() const
 {
   QJsonObject json;
-  json["pos"]  = QJsonArray() << Scene::serialize(begin) << Scene::serialize(end);
-  json["color"]= Scene::serialize(color);
+  json["pos"]  = QJsonArray() << json::serialize(begin) << json::serialize(end);
+  json["color"]= json::serialize(color);
   return std::move(json);
 }
 
@@ -57,47 +58,6 @@ const Scene::DrawingFigureMethods Scene::drawingFigureMethods[3]= {
     return scene->addLine(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), pen);
   }
 };
-
-QJsonArray Scene::serialize(QPointF const pointF)
-{
-  return QJsonArray() << pointF.x() << pointF.y();
-}
-QJsonArray Scene::serialize(const QPolygonF &polygonF)
-{
-  QJsonArray array;
-  for (auto const point : polygonF)
-    array.push_back(serialize(point));
-
-  return std::move(array);
-}
-QJsonArray Scene::serialize(QRectF const rectF)
-{
-  return QJsonArray() << rectF.x() << rectF.y() << rectF.width() << rectF.height();
-}
-QString Scene::serialize(QColor const &color)
-{
-  return color.operator QVariant().toByteArray();
-}
-
-QPointF Scene::deserializePointF(const QJsonArray &array)
-{
-  return QPointF(array[0].toDouble(), array[1].toDouble());
-}
-QPolygonF Scene::deserializePolygonF(const QJsonArray &array)
-{
-  QPolygonF polygonF;
-  for (auto const &point : array)
-    polygonF.push_back(deserializePointF(point.toArray()));
-  return std::move(polygonF);
-}
-QRectF Scene::deserializeRectF(const QJsonArray &array)
-{
-  return QRectF(array[0].toDouble(), array[1].toDouble(), array[2].toDouble(), array[3].toDouble());
-}
-QColor Scene::deserializeColor(const QString &str)
-{
-  return QVariant(str.toUtf8()).value<QColor>();
-}
 
 Scene::~Scene()= default;
 Scene::Scene(QObject *parent)
@@ -121,8 +81,8 @@ QJsonObject Scene::serialize() const
 
   QJsonObject serial;
   serial["name"]                           = objectName();
-  serial[TO_LITERAL_STRING(_borderPolygon)]= serialize(_borderPolygon);
-  serial["sceneRect"]                      = serialize(sceneRect());
+  serial[TO_LITERAL_STRING(_borderPolygon)]= json::serialize(_borderPolygon);
+  serial["sceneRect"]                      = json::serialize(sceneRect());
 
   {
     constexpr auto figureCount= sizeof(_figuresUser) / sizeof(_figuresUser[0]);
@@ -146,8 +106,8 @@ void Scene::deserialize(QJsonObject const &json)
   assert(std::all_of(std::cbegin(_figuresUser), std::cend(_figuresUser), [](auto const v) { return v.empty(); }));
 
   setObjectName(json["name"].toString());
-  setSceneRect(deserializeRectF(json["sceneRect"].toArray()));
-  _borderPolygon= deserializePolygonF(json[TO_LITERAL_STRING(_borderPolygon)].toArray());
+  setSceneRect(json::deserializeRectF(json["sceneRect"].toArray()));
+  _borderPolygon= json::deserializePolygonF(json[TO_LITERAL_STRING(_borderPolygon)].toArray());
   constructBorderLines();
   {
     constexpr auto figureCount= sizeof(_figuresUser) / sizeof(_figuresUser[0]);

@@ -11,6 +11,7 @@ namespace Ui
 class FiguresPanel;
 }
 class QPushButton;
+class FigureSelectorAdapter;
 
 class FiguresPanel final: public QWidget {
   Q_OBJECT
@@ -20,11 +21,12 @@ class FiguresPanel final: public QWidget {
 public:
   ~FiguresPanel() override;
   FiguresPanel(QWidget *parent= {}, Qt::WindowFlags f= {});
-  FiguresPanel(QColor const &colorIcon= {}, QWidget *parent= {}, Qt::WindowFlags f= {});
+  FiguresPanel(QColor const &colorIcon , QWidget *parent= {}, Qt::WindowFlags f= {});
 
   [[nodiscard]] int buttonFigurePressedId() const;
   Q_SIGNAL void figureChange(int);
   Q_SLOT void setColorFigure(QColor const &color);
+  Q_SLOT void setFigure(FigureSelectorAdapter const &);
 
 private:
   Q_SLOT void guardMultiCheckButton();

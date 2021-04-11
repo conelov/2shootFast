@@ -32,19 +32,6 @@ public:
   using DrawingFigureMethods= QGraphicsItem *(*)(QGraphicsScene *, QRectF const &, QColor const &);
   static const DrawingFigureMethods drawingFigureMethods[3];
 
-
-private:
-  /// STATIC METHODS
-  static QJsonArray serialize(QPointF);
-  static QJsonArray serialize(const QPolygonF &);
-  static QJsonArray serialize(QRectF);
-  static QString serialize(const QColor &);
-
-  static QPointF deserializePointF(QJsonArray const &);
-  static QPolygonF deserializePolygonF(QJsonArray const &);
-  static QRectF deserializeRectF(QJsonArray const &);
-  static QColor deserializeColor(const QString &);
-
 public:
   /// MEMBER
   std::unique_ptr<UserInputBase> inputHandler;

@@ -2,16 +2,22 @@
 #include <QApplication>
 #include <QDebug>
 #include <QStyleFactory>
+#include <FigureSelectorAdapter.hpp>
 
-int main(int argc, char *argv[])
-{
-  QApplication a(argc, argv);
-  QApplication::setStyle(QStyleFactory::create("cleanlooks"));
-  QApplication::setOrganizationName("dym_conelove");
-  QApplication::setApplicationName("2shoot");
+#ifdef TO_LITERAL_STRING
+#error "TO_LITERAL_STRING is defined"
+#endif
+#define TO_LITERAL_STRING(in) #in
 
-  FormMain formMain;
-  formMain.show();
+int main(int argc, char *argv[]) {
+    qRegisterMetaTypeStreamOperators<FigureSelectorAdapter>(TO_LITERAL_STRING(FigureSelectorAdapter));
+    QApplication a(argc, argv);
+    QApplication::setStyle(QStyleFactory::create("cleanlooks"));
+    QApplication::setOrganizationName("dym_conelove");
+    QApplication::setApplicationName("2shoot");
 
-  return QApplication::exec();
+    FormMain formMain;
+    formMain.show();
+
+    return QApplication::exec();
 }

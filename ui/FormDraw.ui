@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>619</width>
-    <height>317</height>
+    <width>762</width>
+    <height>541</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -66,28 +66,35 @@
     </widget>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_4">
-     <item>
-      <widget class="FiguresPanel" name="figuresPanel" native="true"/>
-     </item>
-     <item>
-      <spacer name="verticalSpacer_4">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="spacing">
+      <number>4</number>
+     </property>
      <item>
       <widget class="QPushButton" name="pushButton_setColor">
        <property name="text">
         <string>Цвет</string>
        </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolBox" name="toolBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <widget class="FiguresPanel" name="figuresPanel" native="true">
+        <attribute name="label">
+         <string>Фигуры</string>
+        </attribute>
+       </widget>
+       <widget class="QWidget" name="toolBoxPage2" native="true">
+        <attribute name="label">
+         <string/>
+        </attribute>
+       </widget>
       </widget>
      </item>
      <item>
@@ -159,7 +166,6 @@
   <tabstop>lineEdit_title</tabstop>
   <tabstop>pushButton_sceneSave</tabstop>
   <tabstop>pushButton_exit</tabstop>
-  <tabstop>pushButton_setColor</tabstop>
   <tabstop>graphicsView</tabstop>
  </tabstops>
  <resources/>

@@ -5,6 +5,7 @@
 #include "FormDraw.hpp"
 #include "FormMain.hpp"
 #include "ui_FormDraw.h"
+#include <FigureSelectorAdapter.hpp>
 #include <QColorDialog>
 #include <QFile>
 #include <QJsonDocument>
@@ -22,18 +23,20 @@ FormDraw::~FormDraw()
 {
   QSettings settings= FormMain::getGlobalQSetting();
   settings.setValue(TO_LITERAL_STRING(colorFigure), colorFigure);
-  settings.setValue(TO_LITERAL_STRING(figureSelector), figureSelector);
+  settings.setValue(TO_LITERAL_STRING(figureSelector), QVariant::fromValue(*figureSelector));
 }
 FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
     : QWidget(parent, f)
     , ui(new Ui::FormDraw)
+    , figureSelector(new FigureSelectorAdapter)
 {
   QSettings settings= FormMain::getGlobalQSetting();
   colorFigure       = settings.value(TO_LITERAL_STRING(colorFigure)).value<QColor>();
-  figureSelector    = settings.value(TO_LITERAL_STRING(figureSelector)).value<int>();
+  *figureSelector   = settings.value(TO_LITERAL_STRING(figureSelector)).value<FigureSelectorAdapter>();
 
   ui->setupUi(this);
 
+  ui->figuresPanel->setFigure(*figureSelector);
   ui->figuresPanel->setColorFigure(colorFigure);
 
   QObject::connect(ui->pushButton_sceneNew, &QPushButton::clicked, this, &FormDraw::sceneNew);
@@ -41,7 +44,7 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
   QObject::connect(ui->pushButton_sceneSave, &QPushButton::clicked, this, &FormDraw::sceneSafe);
   QObject::connect(ui->pushButton_setColor, &QPushButton::clicked, this, &FormDraw::setColor);
 
-  QObject::connect(ui->figuresPanel, &FiguresPanel::figureChange, this, [this](int i) { figureSelector= i; });
+  QObject::connect(ui->figuresPanel, &FiguresPanel::figureChange, this, &FormDraw::setFigure);
 }
 void FormDraw::sceneNew()
 {
@@ -49,7 +52,7 @@ void FormDraw::sceneNew()
   scene->setObjectName(ui->lineEdit_title->text());
   {
     auto const handle     = new UserInputCreator(scene.get());
-    handle->figureSelector= &figureSelector;
+    handle->figureSelector= figureSelector.get();
     handle->colorPainting = &colorFigure;
     scene->inputHandler.reset(handle);
     ui->graphicsView->setScene(scene.get());
@@ -64,7 +67,7 @@ void FormDraw::sceneLoad()
   scene.reset(new Scene(QJsonDocument::fromJson(QByteArray(file.readAll())).object()));
   {
     auto const handle     = new UserInputCreator(scene.get());
-    handle->figureSelector= &figureSelector;
+    handle->figureSelector= figureSelector.get();
     handle->colorPainting = &colorFigure;
     scene->inputHandler.reset(handle);
     ui->graphicsView->setScene(scene.get());
@@ -84,4 +87,9 @@ void FormDraw::setColor()
 {
   colorFigure= QColorDialog::getColor(colorFigure, this);
   ui->figuresPanel->setColorFigure(colorFigure);
+}
+void FormDraw::setFigure(int const i)
+{
+  figureSelector->type= FigureSelectorAdapter::shape;
+  figureSelector->i= i;
 }

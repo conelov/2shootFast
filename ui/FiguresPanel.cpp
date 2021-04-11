@@ -4,6 +4,7 @@
 
 #include "FiguresPanel.hpp"
 #include "ui_FiguresPanel.h"
+#include <FigureSelectorAdapter.hpp>
 #include <QDebug>
 #include <QPainter>
 
@@ -76,4 +77,10 @@ void FiguresPanel::setColorFigure(const QColor &color)
 
   ui->pushButton_line->setIcon(pixmapFromAlphaMap(color, ":/res/img/line.png"));
   ui->pushButton_line->setIconSize({ 32, 32 });
+}
+void FiguresPanel::setFigure(FigureSelectorAdapter const &selector)
+{
+  buttonFigureCurrentPressed= findChildren<QPushButton *>()[selector.i];
+  buttonFigureCurrentPressed->setChecked(true);
+  emit figureChange(selector.i);
 }
