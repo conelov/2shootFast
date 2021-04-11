@@ -2,7 +2,7 @@
 // Created by dym on 11.04.2021.
 //
 #include "UserInputBase.hpp"
-#include <SceneBase.hpp>
+#include <Scene.hpp>
 
 UserInputBase::CollidingIgnore::CollidingIgnore(QGraphicsScene *sceneIn)
     : scene(sceneIn)
@@ -27,7 +27,7 @@ UserInputBase::CollidingIgnore &UserInputBase::CollidingIgnore::remove(QGraphics
   assert(erCount == 1);
   return *this;
 }
-UserInputBase::UserInputBase(SceneBase *scene)
+UserInputBase::UserInputBase(Scene *scene)
     : scene(scene)
 {}
 UserInputBase::CollidingIgnore UserInputBase::collidingIgnore()

@@ -10,14 +10,13 @@ namespace Ui
 {
 class FormDraw;
 }
-class FormMain;
-class SceneBase;
+class Scene;
 
 class FormDraw final: public QWidget {
   Q_OBJECT
 
   QScopedPointer<Ui::FormDraw> ui;
-  QScopedPointer<SceneBase> scene;
+  QScopedPointer<Scene> scene;
   int figureSelector = -1;
   QColor colorFigure;
 
@@ -29,6 +28,7 @@ private:
   Q_SLOT void sceneNew();
   Q_SLOT void sceneLoad();
   Q_SLOT void sceneSafe();
+  Q_SLOT void setColor();
 };
 
 #endif // INC_2SHOOT_FORMDRAW_HPP

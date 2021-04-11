@@ -15,7 +15,7 @@ if (NOT CMAKE_PREFIX_PATH)
 endif ()
 
 add_library(${PROJECT_NAME}_qObjs STATIC
-        qObjs/SceneBase.hpp qObjs/SceneBase.cpp)
+        qObjs/Scene.hpp qObjs/Scene.cpp)
 set_target_properties(${PROJECT_NAME}_qObjs PROPERTIES
         AUTOMOC ON
         INCLUDE_CURRENT_DIR ON

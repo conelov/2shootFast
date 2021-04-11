@@ -7,7 +7,7 @@
 #include <vector>
 
 class QGraphicsSceneMouseEvent;
-class SceneBase;
+class Scene;
 class QGraphicsScene;
 class QGraphicsItem;
 
@@ -33,13 +33,13 @@ protected:
 
   /// MEMBERS
 protected:
-  SceneBase *const scene{};
+  Scene *const scene{};
 
   /// METHODS
 public:
   virtual ~UserInputBase() = default;
   UserInputBase() = delete;
-  UserInputBase(SceneBase *scene);
+  UserInputBase(Scene *scene);
   virtual void mousePressEvent(QGraphicsSceneMouseEvent *event)= 0;
   virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) =0;
   virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) =0;

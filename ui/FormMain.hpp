@@ -21,6 +21,7 @@ class FormMain final: public QMainWindow {
 public:
   /// METHODS
   static QSettings getGlobalQSetting();
+
   ~FormMain() override;
   FormMain(QWidget *parent= {}, Qt::WindowFlags flags= {});
 };

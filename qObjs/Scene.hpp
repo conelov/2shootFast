@@ -2,18 +2,18 @@
 // Created by dym on 10.04.2021.
 //
 
-#ifndef INC_2SHOOT_SCENEBASE_HPP
-#define INC_2SHOOT_SCENEBASE_HPP
+#ifndef INC_2SHOOT_SCENE_HPP
+#define INC_2SHOOT_SCENE_HPP
 #include <QGraphicsScene>
 #include <memory>
 
 class UserInputBase;
 
-class SceneBase: public QGraphicsScene {
+class Scene: public QGraphicsScene {
   Q_OBJECT
 
-  /// STATIC DEFINE
 public:
+  /// DEFINE / STATIC MEMBER
   class GraphicsItemDeleter {
     QGraphicsScene *scene;
 
@@ -29,8 +29,12 @@ public:
     [[nodiscard]] QJsonObject serialize() const;
     static DrawingPath deserialize(const QJsonObject &json);
   };
+  using DrawingFigureMethods= QGraphicsItem *(*)(QGraphicsScene *, QRectF const &, QColor const &);
+  static const DrawingFigureMethods drawingFigureMethods[3];
+
 
 private:
+  /// STATIC METHODS
   static QJsonArray serialize(QPointF);
   static QJsonArray serialize(const QPolygonF &);
   static QJsonArray serialize(QRectF);
@@ -43,16 +47,19 @@ private:
 
 public:
   /// MEMBER
-  std::unique_ptr<UserInputBase> _inputHandler;
+  std::unique_ptr<UserInputBase> inputHandler;
+
+private:
   QPolygonF _borderPolygon;
   std::vector<std::unique_ptr<QGraphicsLineItem, GraphicsItemDeleter>> _borderLines;
 
+public:
   std::vector<std::pair<DrawingPath, QGraphicsItem *>> _figuresUser[3];
 
   /// METHODS
-  ~SceneBase() override;
-  SceneBase(QPolygonF polygonFIn, QObject *parent= {});
-  SceneBase(QJsonObject const &jsonObject, QObject *parent= {});
+  ~Scene() override;
+  Scene(QPolygonF polygonFIn, QObject *parent= {});
+  Scene(QJsonObject const &jsonObject, QObject *parent= {});
 
   [[nodiscard]] virtual QJsonObject serialize() const;
   virtual void deserialize(QJsonObject const &json);
@@ -63,7 +70,7 @@ public:
   }
 
 private:
-  SceneBase(QObject *parent= {});
+  Scene(QObject *parent= {});
 
   void constructBorderLines();
 
@@ -73,4 +80,4 @@ protected:
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 };
 
-#endif // INC_2SHOOT_SCENEBASE_HPP
+#endif // INC_2SHOOT_SCENE_HPP

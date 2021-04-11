@@ -5,7 +5,7 @@
 #include "UserInputCreator.hpp"
 #include <QGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
-#include <SceneBase.hpp>
+#include <Scene.hpp>
 #include <memory>
 
 #include <QDebug>
@@ -13,7 +13,7 @@
 class UserInputCreator::DrawingProcess {
   QPointF const _begin;
   QPointF _end;
-  std::unique_ptr<QGraphicsItem, SceneBase::GraphicsItemDeleter> _figure;
+  std::unique_ptr<QGraphicsItem, Scene::GraphicsItemDeleter> _figure;
 
 public:
   DrawingProcess()                      = delete;
@@ -76,23 +76,8 @@ public:
   }
 };
 
-const UserInputCreator::DrawingFigureMethods UserInputCreator::drawingFigureMethods[3]= {
-  [](QGraphicsScene *const scene, QRectF const &rectF, QColor const &color) -> QGraphicsItem * {
-    return scene->addEllipse(rectF, color, color);
-  },
-  [](QGraphicsScene *const scene, QRectF const &rectF, QColor const &color) -> QGraphicsItem * {
-    return scene->addPolygon(QPolygonF(rectF), color, color);
-  },
-  [](QGraphicsScene *const scene, QRectF const &rect, QColor const &color) -> QGraphicsItem *
-  {
-    QPen pen(color);
-    pen.setWidth(4);
-    return scene->addLine(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), pen);
-  }
-};
-
 UserInputCreator::~UserInputCreator()= default;
-UserInputCreator::UserInputCreator(SceneBase *scene)
+UserInputCreator::UserInputCreator(Scene *scene)
     : UserInputBase(scene)
 {}
 void UserInputCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -110,7 +95,7 @@ void UserInputCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     auto oldFigure(std::move(*drawingProcess));
 
     drawingProcess->set(
-        drawingFigureMethods[*figureSelector](scene, { drawingProcess->begin(), event->scenePos() }, *colorPainting),
+        Scene::drawingFigureMethods[*figureSelector](scene, { drawingProcess->begin(), event->scenePos() }, *colorPainting),
         event->scenePos());
     auto raii(collidingIgnore());
     if (oldFigure)
@@ -129,7 +114,7 @@ void UserInputCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
   if (*figureSelector != -1 && drawingProcess) {
     scene->_figuresUser[*figureSelector].emplace_back(
-        SceneBase::DrawingPath{ drawingProcess->begin(), drawingProcess->end(), *colorPainting }, drawingProcess->release());
+        Scene::DrawingPath{ drawingProcess->begin(), drawingProcess->end(), *colorPainting }, drawingProcess->release());
     drawingProcess.reset();
   }
 }

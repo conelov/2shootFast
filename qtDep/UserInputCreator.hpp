@@ -15,7 +15,6 @@ class QColor;
 class UserInputCreator : public UserInputBase{
 
   /// DEFINE
-  using DrawingFigureMethods= QGraphicsItem *(*)(QGraphicsScene *, QRectF const &, QColor const &);
   class DrawingProcess;
 
   /// MEMBERS
@@ -25,12 +24,11 @@ public:
 
 private:
   std::unique_ptr<DrawingProcess> drawingProcess;
-  static const DrawingFigureMethods drawingFigureMethods[3];
 
   /// METHODS
 public:
   ~UserInputCreator() override;
-  UserInputCreator(SceneBase *scene);
+  UserInputCreator(Scene *scene);
   void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;

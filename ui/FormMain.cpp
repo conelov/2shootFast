@@ -12,6 +12,7 @@ return QSettings(QCoreApplication::applicationDirPath() + "/settings.cfg", QSett
 return QSettings{};
 #endif
 }
+
 FormMain::~FormMain()= default;
 FormMain::FormMain(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
