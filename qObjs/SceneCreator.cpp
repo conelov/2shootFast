@@ -30,40 +30,6 @@ const SceneCreator::DrawingFigureMethods SceneCreator::drawingFigureMethods[3]= 
   }
 };
 
-class SceneCreator::CollidingIgnore {
-  QGraphicsScene *scene;
-  std::vector<QGraphicsItem *> items;
-
-public:
-  CollidingIgnore()                       = delete;
-  CollidingIgnore(CollidingIgnore const &)= delete;
-  CollidingIgnore &operator=(CollidingIgnore const &)= delete;
-  CollidingIgnore(CollidingIgnore &&)                = default;
-  CollidingIgnore &operator=(CollidingIgnore &&)= default;
-
-  CollidingIgnore(QGraphicsScene *sceneIn)
-      : scene(sceneIn)
-  {}
-  ~CollidingIgnore()
-  {
-    for (auto ptr : items)
-      scene->addItem(ptr);
-  }
-  void add(QGraphicsItem *in)
-  {
-    if (!in)
-      return;
-    items.push_back(in);
-    scene->removeItem(in);
-  }
-  void remove(QGraphicsItem *in)
-  {
-    auto const erCount= std::erase(items, in);
-    scene->addItem(in);
-    assert(erCount == 1);
-  }
-};
-
 class SceneCreator::DrawingProcess {
   QPointF const _begin;
   QPointF _end;
@@ -173,7 +139,7 @@ void SceneCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
   if (figureSelector != -1) {
     assert(!drawingProcess);
     if (SceneBase::contains(event->scenePos())) {
-      drawingProcess= std::make_unique<DrawingProcess>(event->scenePos(), this);
+      drawingProcess.reset(new DrawingProcess(event->scenePos(), this));
     }
   }
   QGraphicsScene::mousePressEvent(event);
@@ -187,11 +153,16 @@ void SceneCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     drawingProcess->set(
         drawingFigureMethods[figureSelector](this, { drawingProcess->begin(), event->scenePos() }, colorFigure),
         event->scenePos());
-    auto raii(collidingIgnore(oldFigure.figure()));
+    auto raii(collidingIgnore());
+    if (oldFigure)
+      raii.add(oldFigure.figure());
     if (!collidingItems(drawingProcess->figure()).isEmpty()) {
-      raii.remove(oldFigure.figure());
+      if (oldFigure)
+        raii.remove(oldFigure.figure());
       *drawingProcess= std::move(oldFigure);
-      qDebug() << "colliding";
+
+      static size_t counter{};
+      qDebug() << "colliding" << ++counter;
     }
   }
   QGraphicsScene::mouseMoveEvent(event);
@@ -206,30 +177,4 @@ void SceneCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     drawingProcess.reset();
   }
   QGraphicsScene::mouseReleaseEvent(event);
-}
-
-template<typename... Args>
-SceneCreator::CollidingIgnore SceneCreator::collidingIgnore(Args &&...args)
-{
-  CollidingIgnore raii(this);
-
-  (raii.add(std::forward<Args>(args)), ...);
-  return std::move(raii);
-}
-
-QJsonObject SceneCreator::DrawingPath::serialize() const
-{
-  QJsonObject json;
-  json["pos"]  = QJsonArray() << SceneBase::serialize(begin) << SceneBase::serialize(end);
-  json["color"]= SceneBase::serialize(color);
-  return std::move(json);
-}
-SceneCreator::DrawingPath SceneCreator::DrawingPath::deserialize(const QJsonObject &json)
-{
-  DrawingPath ret;
-  ret.color      = SceneBase::deserializeColor(json["color"].toString());
-  auto const path= json["pos"].toArray();
-  ret.begin      = SceneBase::deserializePointF(path[0].toArray());
-  ret.end        = SceneBase::deserializePointF(path[1].toArray());
-  return std::move(ret);
 }
