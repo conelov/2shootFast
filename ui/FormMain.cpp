@@ -1,15 +1,17 @@
 //
-// Created by dym on 08.04.2021.
+// Created by dym on 15.04.2021.
 //
-
 #include "FormMain.hpp"
 #include "ui_FormMain.h"
+#include "utils/Paint.hpp"
+#include <QGraphicsScene>
 
-QSettings FormMain::getGlobalQSetting(){
+QSettings FormMain::getGlobalQSetting()
+{
 #ifdef linux
-return QSettings(QCoreApplication::applicationDirPath() + "/settings.cfg", QSettings::NativeFormat);
+  return QSettings(QCoreApplication::applicationDirPath() + "/settings.cfg", QSettings::NativeFormat);
 #else
-return QSettings{};
+  return QSettings{};
 #endif
 }
 
@@ -17,9 +19,9 @@ FormMain::~FormMain()= default;
 FormMain::FormMain(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
     , ui(new Ui::FormMain)
+    , methods(new draw::Methods)
 {
   ui->setupUi(this);
 
   resize(800, 600);
 }
-

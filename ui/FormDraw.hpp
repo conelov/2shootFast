@@ -1,36 +1,35 @@
 //
-// Created by dym on 10.04.2021.
+// Created by dym on 15.04.2021.
 //
 
 #ifndef INC_2SHOOT_FORMDRAW_HPP
 #define INC_2SHOOT_FORMDRAW_HPP
 #include <QWidget>
+#include "utils/Define.hpp"
 
 namespace Ui
 {
 class FormDraw;
 }
-class Scene;
-class FigureSelectorAdapter;
+class QPushButton;
+class PainterManager;
+
 
 class FormDraw final: public QWidget {
   Q_OBJECT
 
+  constexpr static const QSize iconSize= { 32, 32 };
   QScopedPointer<Ui::FormDraw> ui;
-  QScopedPointer<Scene> scene;
-  QScopedPointer<FigureSelectorAdapter> figureSelector;
-  QColor colorFigure;
+  QSharedPointer<PainterManager> paintManager;
+  QPushButton *buttonActive{};
+  std::vector<QPushButton *> buttons[draw::paintersCount];
 
 public:
   ~FormDraw() override;
   FormDraw(QWidget *parent= {}, Qt::WindowFlags f= {});
 
 private:
-  Q_SLOT void sceneNew();
-  Q_SLOT void sceneLoad();
-  Q_SLOT void sceneSafe();
-  Q_SLOT void setColor();
-  Q_SLOT void setFigure(int);
+  Q_SLOT void colorChange();
 };
 
 #endif // INC_2SHOOT_FORMDRAW_HPP

@@ -1,95 +1,104 @@
 //
-// Created by dym on 10.04.2021.
+// Created by dym on 15.04.2021.
 //
-
 #include "FormDraw.hpp"
 #include "FormMain.hpp"
 #include "ui_FormDraw.h"
-#include <FigureSelectorAdapter.hpp>
+#include "utils/InputManager.hpp"
+#include "utils/Paint.hpp"
 #include <QColorDialog>
-#include <QFile>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QSettings>
-#include <Scene.hpp>
-#include <UserInputCreator.hpp>
+#include <QVBoxLayout>
+#include <utils/Define.hpp>
 
-#ifdef TO_LITERAL_STRING
-  #error "TO_LITERAL_STRING is defined"
-#endif
-#define TO_LITERAL_STRING(in) #in
+#include <QDebug>
 
 FormDraw::~FormDraw()
 {
   QSettings settings= FormMain::getGlobalQSetting();
-  settings.setValue(TO_LITERAL_STRING(colorFigure), colorFigure);
-  settings.setValue(TO_LITERAL_STRING(figureSelector), QVariant::fromValue(*figureSelector));
+  settings.setValue(TO_LITERAL_STRING(color), *paintManager->color);
+  settings.setValue(TO_LITERAL_STRING(selector), QVariant::fromValue(*paintManager->selector));
 }
 FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
     : QWidget(parent, f)
     , ui(new Ui::FormDraw)
-    , figureSelector(new FigureSelectorAdapter)
+    , paintManager(new PainterManager)
 {
-  QSettings settings= FormMain::getGlobalQSetting();
-  colorFigure       = settings.value(TO_LITERAL_STRING(colorFigure)).value<QColor>();
-  *figureSelector   = settings.value(TO_LITERAL_STRING(figureSelector)).value<FigureSelectorAdapter>();
-
+  auto &color   = *paintManager->color;
+  auto &selector= *paintManager->selector;
+  {
+    QSettings settings= FormMain::getGlobalQSetting();
+    color             = settings.value(TO_LITERAL_STRING(color), QColor(Qt::yellow)).value<QColor>();
+    selector          = settings.value(TO_LITERAL_STRING(selector)).value<draw::Selector>();
+  }
   ui->setupUi(this);
+  auto const & methods= *qobject_cast<FormMain *>(parent)->methods;
+  assert(draw::paintersCount == ui->toolBox->count());
 
-  ui->figuresPanel->setFigure(*figureSelector);
-  ui->figuresPanel->setColorFigure(colorFigure);
+  for (size_t type{}; type < draw::paintersCount; ++type) {
+    auto const layout= new QVBoxLayout;
+    for (size_t i{}; i < methods.methods[type].size(); ++i) {
+      auto const button= new QPushButton;
+      buttons[type].push_back(button);
+      button->setCheckable(true);
+      button->setIconSize(iconSize);
 
-  QObject::connect(ui->pushButton_sceneNew, &QPushButton::clicked, this, &FormDraw::sceneNew);
-  QObject::connect(ui->pushButton_sceneLoad, &QPushButton::clicked, this, &FormDraw::sceneLoad);
-  QObject::connect(ui->pushButton_sceneSave, &QPushButton::clicked, this, &FormDraw::sceneSafe);
-  QObject::connect(ui->pushButton_setColor, &QPushButton::clicked, this, &FormDraw::setColor);
-
-  QObject::connect(ui->figuresPanel, &FiguresPanel::figureChange, this, &FormDraw::setFigure);
-}
-void FormDraw::sceneNew()
-{
-  scene.reset(new Scene(QRectF{ -300, -250, 600, 500 }));
-  scene->setObjectName(ui->lineEdit_title->text());
-  {
-    auto const handle     = new UserInputCreator(scene.get());
-    handle->figureSelector= figureSelector.get();
-    handle->colorPainting = &colorFigure;
-    scene->inputHandler.reset(handle);
-    ui->graphicsView->setScene(scene.get());
+      QObject::connect(
+          button,
+          &QPushButton::pressed,
+          this,
+          [this, type]
+          {
+            auto const sendB= qobject_cast<QPushButton *>(sender());
+            if (buttonActive == sendB) {
+              buttonActive               = nullptr;
+              paintManager->selector->type= draw::Selector::none;
+            } else {
+              if (buttonActive) {
+                buttonActive->setChecked(false);
+                buttonActive= sendB;
+              } else {
+                buttonActive= sendB;
+              }
+              paintManager->selector->type= static_cast<draw::Selector::Type>(type + 1);
+              paintManager->selector->pos=
+                  std::distance(buttons[type].cbegin(), std::find(buttons[type].cbegin(), buttons[type].cend(), sendB));
+            }
+          });
+      layout->addWidget(button);
+    }
+    layout->addStretch();
+    layout->setMargin(this->layout()->margin());
+    layout->setSpacing(this->layout()->spacing());
+    ui->toolBox->widget(type)->setLayout(layout);
   }
-}
-void FormDraw::sceneLoad()
-{
-  QFile file(ui->lineEdit_title->text() + "_scene.json");
-  if (!file.open(QIODevice::ReadOnly))
-    assert(false);
 
-  scene.reset(new Scene(QJsonDocument::fromJson(QByteArray(file.readAll())).object()));
-  {
-    auto const handle     = new UserInputCreator(scene.get());
-    handle->figureSelector= figureSelector.get();
-    handle->colorPainting = &colorFigure;
-    scene->inputHandler.reset(handle);
-    ui->graphicsView->setScene(scene.get());
+  QObject::connect(
+      ui->pushButton_setColor,
+      &QPushButton::pressed,
+      this,
+      [this]
+      {
+        *paintManager->color= QColorDialog::getColor(*paintManager->color, this);
+        colorChange();
+      });
+
+  if (selector) {
+    buttons[selector.type - 1].at(selector.pos)->click();
+    ui->toolBox->setCurrentIndex(selector.type - 1);
   }
+  colorChange();
+}
 
-  ui->lineEdit_title->setText(scene->objectName());
-}
-void FormDraw::sceneSafe()
+void FormDraw::colorChange()
 {
-  QFile file(ui->lineEdit_title->text() + "_scene.json");
-  if (!file.open(QIODevice::WriteOnly))
-    assert(false);
-
-  file.write(QJsonDocument(scene->serialize()).toJson());
-}
-void FormDraw::setColor()
-{
-  colorFigure= QColorDialog::getColor(colorFigure, this);
-  ui->figuresPanel->setColorFigure(colorFigure);
-}
-void FormDraw::setFigure(int const i)
-{
-  figureSelector->type= FigureSelectorAdapter::shape;
-  figureSelector->i= i;
+  auto const & methods= *qobject_cast<FormMain *>(parent())->methods;
+  for (size_t type{}; type < draw::paintersCount; ++type) {
+    for (size_t i{}; i < buttons[type].size(); ++i) {
+      QPixmap pixmap(iconSize);
+      pixmap.fill(Qt::transparent);
+      QPainter painter(&pixmap);
+      methods.methods[type].at(i).paint(&painter, { 0, 0, iconSize.width(), iconSize.height() }, *paintManager->color);
+      buttons[type].at(i)->setIcon(QIcon(std::move(pixmap)));
+    }
+  }
 }
