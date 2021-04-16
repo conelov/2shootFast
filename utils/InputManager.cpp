@@ -3,25 +3,39 @@
 //
 #include "InputManager.hpp"
 #include "Paint.hpp"
+#include "SceneItem.hpp"
+#include "moc/Scene.hpp"
 #include <QColor>
+#include <QGraphicsSceneMouseEvent>
 
 InputManagerBase::~InputManagerBase()= default;
 
-PainterManager::~PainterManager()= default;
+struct PainterManager::PainterPath
+{
+  QPointF begin;
+  SceneItem *item;
+};
 
-PainterManager::PainterManager()
-    : color(new QColor)
-    ,selector(new draw::Selector)
-{}
-void PainterManager::mousePressEvent(QGraphicsSceneMouseEvent *event)
+PainterManager::~PainterManager()= default;
+PainterManager::PainterManager() = default;
+void PainterManager::mousePressEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
 {
-  assert(false);
+  assert(!path);
+  if (!painter)
+    return;
+  path.reset(new PainterPath{ event->scenePos(), new SceneItem(*painter, { event->scenePos() , event->scenePos() }) });
+  scene->addItem(path->item);
 }
-void PainterManager::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void PainterManager::mouseMoveEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
 {
-  assert(false);
+  QRectF const rectItemNew{ path->begin, event->scenePos() }, rectItemPrev= path->item->sceneBoundingRect();
+  path->item->resize(rectItemNew);
+  /// TODO: описать область обновления во время перерисовки
+  scene->update();
+  //  scene->update(rectItemNew);
+  //  scene->update(rectItemPrev);
 }
-void PainterManager::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void PainterManager::mouseReleaseEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
 {
-  assert(false);
+  path.reset();
 }

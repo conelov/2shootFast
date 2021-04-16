@@ -13,11 +13,15 @@ class Painter;
 }
 
 class SceneItem: public QGraphicsItem {
-public:
-  const std::unique_ptr<draw::Painter> drawMethod;
 
-  virtual ~SceneItem();
-  SceneItem(QGraphicsItem *parent= {});
+  QRectF _boundRect;
+  const std::unique_ptr<const draw::Painter> drawMethod;
+public:
+  ~SceneItem() override;
+  SceneItem(draw::Painter const &method,  QRectF bound, QGraphicsItem *parent= {});
+  QRectF boundingRect() const override;
+  void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+  void resize(QRectF rectNew);
 };
 
 #endif // INC_2SHOOT_SCENEITEM_HPP

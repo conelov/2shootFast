@@ -2,43 +2,56 @@
 // Created by dym on 15.04.2021.
 //
 #include "FormDraw.hpp"
-#include "FormMain.hpp"
 #include "ui_FormDraw.h"
+
+#include "FormMain.hpp"
+#include "moc/Scene.hpp"
+#include "utils/Define.hpp"
 #include "utils/InputManager.hpp"
 #include "utils/Paint.hpp"
+
 #include <QColorDialog>
 #include <QVBoxLayout>
-#include <utils/Define.hpp>
 
 #include <QDebug>
 
 FormDraw::~FormDraw()
 {
+  if (sceneActive) {
+    ui->graphicsView->setScene(nullptr);
+    sceneActive->setParent(nullptr);
+    delete sceneActive;
+  }
+
   QSettings settings= FormMain::getGlobalQSetting();
-  settings.setValue(TO_LITERAL_STRING(color), *paintManager->color);
-  settings.setValue(TO_LITERAL_STRING(selector), QVariant::fromValue(*paintManager->selector));
+  settings.setValue(TO_LITERAL_STRING(color), color);
+
+  for (int type{}; type < draw::paintersCount; ++type) {
+    for (int i{}; i < buttons[type].size(); ++i) {
+      if (buttons[type][i].first != buttonActive)
+        continue;
+      settings.setValue("buttonActiveType", type);
+      settings.setValue("buttonActiveIndex", i);
+    }
+  }
 }
 FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
     : QWidget(parent, f)
     , ui(new Ui::FormDraw)
     , paintManager(new PainterManager)
 {
-  auto &color   = *paintManager->color;
-  auto &selector= *paintManager->selector;
-  {
-    QSettings settings= FormMain::getGlobalQSetting();
-    color             = settings.value(TO_LITERAL_STRING(color), QColor(Qt::yellow)).value<QColor>();
-    selector          = settings.value(TO_LITERAL_STRING(selector)).value<draw::Selector>();
-  }
+  QSettings settings= FormMain::getGlobalQSetting();
+  color             = settings.value(TO_LITERAL_STRING(color), QColor(Qt::yellow)).value<QColor>();
+
   ui->setupUi(this);
-  auto const & methods= *qobject_cast<FormMain *>(parent)->methods;
+  auto const &methods= *qobject_cast<FormMain *>(parent)->methods;
   assert(draw::paintersCount == ui->toolBox->count());
 
   for (size_t type{}; type < draw::paintersCount; ++type) {
     auto const layout= new QVBoxLayout;
     for (size_t i{}; i < methods.methods[type].size(); ++i) {
       auto const button= new QPushButton;
-      buttons[type].push_back(button);
+      buttons[type].push_back(ButtonPainterPair{ button, new draw::Painter(methods.methods[type][i]) });
       button->setCheckable(true);
       button->setIconSize(iconSize);
 
@@ -50,8 +63,8 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
           {
             auto const sendB= qobject_cast<QPushButton *>(sender());
             if (buttonActive == sendB) {
-              buttonActive               = nullptr;
-              paintManager->selector->type= draw::Selector::none;
+              buttonActive         = nullptr;
+              paintManager->painter= nullptr;
             } else {
               if (buttonActive) {
                 buttonActive->setChecked(false);
@@ -59,9 +72,11 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
               } else {
                 buttonActive= sendB;
               }
-              paintManager->selector->type= static_cast<draw::Selector::Type>(type + 1);
-              paintManager->selector->pos=
-                  std::distance(buttons[type].cbegin(), std::find(buttons[type].cbegin(), buttons[type].cend(), sendB));
+              paintManager->painter= std::find_if(
+                                         buttons[type].cbegin(),
+                                         buttons[type].cend(),
+                                         [sendB](ButtonPainterPair const &i) { return i.first == sendB; })
+                                         ->second.get();
             }
           });
       layout->addWidget(button);
@@ -78,27 +93,46 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
       this,
       [this]
       {
-        *paintManager->color= QColorDialog::getColor(*paintManager->color, this);
+        color= QColorDialog::getColor(color, this);
         colorChange();
       });
 
-  if (selector) {
-    buttons[selector.type - 1].at(selector.pos)->click();
-    ui->toolBox->setCurrentIndex(selector.type - 1);
+  QObject::connect(ui->pushButton_sceneNew, &QPushButton::pressed, this, &FormDraw::sceneNew);
+
+  {
+    int buttonActiveType = settings.value(TO_LITERAL_STRING(buttonActiveType), -1).value<decltype(buttonActiveType)>(),
+        buttonActiveIndex= settings.value(TO_LITERAL_STRING(buttonActiveIndex), -1).value<decltype(buttonActiveIndex)>();
+    assert(buttonActiveType < draw::paintersCount);
+
+    if (buttonActiveType != -1) {
+      assert(buttonActiveIndex != -1);
+      buttons[buttonActiveType][buttonActiveIndex].first->click();
+    }
   }
   colorChange();
 }
 
 void FormDraw::colorChange()
 {
-  auto const & methods= *qobject_cast<FormMain *>(parent())->methods;
   for (size_t type{}; type < draw::paintersCount; ++type) {
-    for (size_t i{}; i < buttons[type].size(); ++i) {
+    for (auto const &button : buttons[type]) {
       QPixmap pixmap(iconSize);
       pixmap.fill(Qt::transparent);
       QPainter painter(&pixmap);
-      methods.methods[type].at(i).paint(&painter, { 0, 0, iconSize.width(), iconSize.height() }, *paintManager->color);
-      buttons[type].at(i)->setIcon(QIcon(std::move(pixmap)));
+      QPen pen= color;
+      pen.setWidth(4);
+      QBrush brush= color;
+      brush.setColor(color.darker(125));
+      button.second->paint(&painter, { 0, 0, iconSize.width(), iconSize.height() }, pen, &brush);
+      button.first->setIcon(QIcon(std::move(pixmap)));
     }
   }
+}
+void FormDraw::sceneNew()
+{
+  assert(!sceneActive);
+  sceneActive             = new Scene;
+  sceneActive->managerWeak= std::weak_ptr(this->paintManager);
+
+  ui->graphicsView->setScene(sceneActive);
 }

@@ -5,31 +5,33 @@
 #ifndef INC_2SHOOT_INPUTMANAGER_HPP
 #define INC_2SHOOT_INPUTMANAGER_HPP
 #include <memory>
-
-class QGraphicsSceneMouseEvent;
-class QColor;
 namespace draw
 {
-class Selector;
-}
+class Painter;
+} // namespace draw
+class Scene;
+class QGraphicsSceneMouseEvent;
+
 struct InputManagerBase
 {
   virtual ~InputManagerBase();
-  virtual void mousePressEvent(QGraphicsSceneMouseEvent *event)  = 0;
-  virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event)= 0;
-  virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event)   = 0;
+  virtual void mousePressEvent(Scene *, QGraphicsSceneMouseEvent *event)  = 0;
+  virtual void mouseReleaseEvent(Scene *, QGraphicsSceneMouseEvent *event)= 0;
+  virtual void mouseMoveEvent(Scene *, QGraphicsSceneMouseEvent *event)   = 0;
 };
 
-struct PainterManager: public InputManagerBase
-{
-  std::unique_ptr< QColor> color;
-  std::unique_ptr<draw::Selector> selector;
+class PainterManager: public InputManagerBase {
+  struct PainterPath;
+  std::unique_ptr<PainterPath> path;
+
+public:
+  draw::Painter const *painter{};
 
   ~PainterManager() override;
-  PainterManager() ;
-  void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-  void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
-  void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+  PainterManager();
+  void mousePressEvent(Scene *, QGraphicsSceneMouseEvent *event) override;
+  void mouseMoveEvent(Scene *, QGraphicsSceneMouseEvent *event) override;
+  void mouseReleaseEvent(Scene *, QGraphicsSceneMouseEvent *event) override;
 };
 
 #endif // INC_2SHOOT_INPUTMANAGER_HPP

@@ -10,6 +10,7 @@ if (NOT CMAKE_PREFIX_PATH)
             "(-DCMAKE_PREFIX_PATH=\"path/to/Qt/lib/cmake\" or -DCMAKE_PREFIX_PATH=/usr/include/{host}/qt{version}/ on Ubuntu)")
 endif ()
 find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
+add_subdirectory("$ENV{CLP_DIR}/ch" CHBuild)
 
 add_library(${PROJECT_NAME}_utils STATIC
         utils/Paint.hpp utils/Paint.cpp
@@ -19,6 +20,20 @@ target_link_libraries(${PROJECT_NAME}_utils PUBLIC
         ${REQUIRED_LIBS_QUALIFIED}
         )
 target_include_directories(${PROJECT_NAME}_utils PRIVATE ${${PROJECT_NAME}_includeDirs})
+
+add_library(${PROJECT_NAME}_moc STATIC
+        moc/Scene.hpp moc/Scene.cpp)
+set_target_properties(${PROJECT_NAME}_moc PROPERTIES
+        AUTOMOC ON
+        INCLUDE_CURRENT_DIR ON
+        )
+target_link_libraries(${PROJECT_NAME}_moc PUBLIC
+        ${REQUIRED_LIBS_QUALIFIED}
+        ch
+#        PRIVATE
+#        ${PROJECT_NAME}_utils
+        )
+target_include_directories(${PROJECT_NAME}_moc PRIVATE ${${PROJECT_NAME}_includeDirs})
 
 add_library(${PROJECT_NAME}_ui STATIC
         ui/FormMain.hpp ui/FormMain.cpp ui/FormMain.ui
@@ -32,6 +47,7 @@ target_link_libraries(${PROJECT_NAME}_ui PUBLIC
         ${REQUIRED_LIBS_QUALIFIED}
         PRIVATE
         ${PROJECT_NAME}_utils
+        ${PROJECT_NAME}_moc
         )
 target_include_directories(${PROJECT_NAME}_ui PRIVATE ${${PROJECT_NAME}_includeDirs} ui)
 

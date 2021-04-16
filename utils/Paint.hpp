@@ -12,31 +12,33 @@ class QPainter;
 
 namespace draw
 {
-struct Painter
+class Painter
 {
   using Paint_fn= void (*)(QPainter *, QRectF, QPen const &, QBrush const *);
   Paint_fn paintFn{};
-  QRectF boundingRect{};
   QPen penBind;
   std::optional<QBrush> brushBind{};
 
-  void paint(QPainter *painter, QRectF rect, QColor const &color) const;
+public:
+  Painter(Paint_fn fn, QPen const &pen, QBrush const * brush = {});
+  void paint(QPainter *painter, QRectF bound, QPen const &pen, QBrush const * brush = {});
+  void paint(QPainter *painter, QRectF bound) const;
 };
 
-struct Selector
-{
-  enum Type : quint8
-  {
-    none,
-    shape,
-    player
-  } type                  = none;
-  using TypeEnumUnderlying= std::underlying_type_t<Type>;
-
-  quint8 pos{};
-
-  operator bool() const;
-};
+//struct Selector
+//{
+//  enum Type : quint8
+//  {
+//    none,
+//    shape,
+//    player
+//  } type                  = none;
+//  using TypeEnumUnderlying= std::underlying_type_t<Type>;
+//
+//  quint8 pos{};
+//
+//  operator bool() const;
+//};
 
 class Methods {
 public:
@@ -47,12 +49,12 @@ public:
 
   Methods();
 
-  Painter const & operator[](Selector select);
+//  Painter const & operator[](Selector select) const;
 };
 } // namespace draw
-Q_DECLARE_METATYPE(draw:: Selector)
-
-QDataStream &operator<<(QDataStream &stream,draw:: Selector item);
-QDataStream &operator>>(QDataStream &stream,draw:: Selector &item);
+//Q_DECLARE_METATYPE(draw:: Selector)
+//
+//QDataStream &operator<<(QDataStream &stream,draw:: Selector item);
+//QDataStream &operator>>(QDataStream &stream,draw:: Selector &item);
 
 #endif // INC_2SHOOT_PAINT_HPP
