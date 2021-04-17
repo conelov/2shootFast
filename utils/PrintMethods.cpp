@@ -3,9 +3,9 @@
 //
 #include "PrintMethods.hpp"
 #include <QPainter>
-namespace draw::methods
+namespace draw::method
 {
-Base::Type draw::methods::Filling::type() const 
+Base::Type draw::method::Filling::type() const
 {
   return filling;
 }

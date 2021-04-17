@@ -6,7 +6,7 @@
 #define INC_2SHOOT_SCENE_HPP
 #include <QGraphicsScene>
 #include <memory>
-class InputManagerBase;
+class InputHandlerBase;
 class SceneItem;
 
 class Scene : public QGraphicsScene{
@@ -14,7 +14,7 @@ class Scene : public QGraphicsScene{
 
   std::vector<SceneItem *> userItems;
 public:
-  std::weak_ptr<InputManagerBase> managerWeak{};
+  std::weak_ptr<InputHandlerBase> managerWeak{};
 
   ~Scene() override;
   Scene(QObject *parent = {});

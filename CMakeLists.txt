@@ -13,19 +13,20 @@ find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
 
 add_library(${PROJECT_NAME}_impl STATIC
         utils/SceneItem.hpp utils/SceneItem.cpp
-        utils/InputManager.hpp utils/InputManager.cpp
+        utils/InputHandler.hpp utils/InputHandler.cpp
         utils/PrintMethods.hpp utils/PrintMethods.cpp
         utils/Define.hpp
         ui/FormMain.hpp ui/FormMain.cpp ui/FormMain.ui
         ui/FormDraw.hpp ui/FormDraw.cpp ui/FormDraw.ui
         moc/Scene.hpp moc/Scene.cpp)
+target_link_libraries(${PROJECT_NAME}_impl PUBLIC
+        ${REQUIRED_LIBS_QUALIFIED}
+        )
 set_target_properties(${PROJECT_NAME}_impl PROPERTIES
         AUTOMOC ON
         AUTOUIC ON
         INCLUDE_CURRENT_DIR ON
-        )
-target_link_libraries(${PROJECT_NAME}_impl PUBLIC
-        ${REQUIRED_LIBS_QUALIFIED}
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
         )
 target_include_directories(${PROJECT_NAME}_impl PRIVATE ${${PROJECT_NAME}_includeDirs} ui)
 

@@ -10,7 +10,7 @@
 #include <QBrush>
 class QPainter;
 
-namespace draw::methods
+namespace draw::method
 {
 class Base {
 public:
@@ -47,10 +47,10 @@ class Line;
 class Rectangle;
 class Circle;
 } // namespace draw::methods
-Q_DECLARE_METATYPE(draw::methods::Line)
-Q_DECLARE_METATYPE(draw::methods::Rectangle)
-Q_DECLARE_METATYPE(draw::methods::Circle)
-namespace draw::methods
+Q_DECLARE_METATYPE(draw::method::Line)
+Q_DECLARE_METATYPE(draw::method::Rectangle)
+Q_DECLARE_METATYPE(draw::method::Circle)
+namespace draw::method
 {
 class Line: public Filling {
 public:

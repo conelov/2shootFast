@@ -7,7 +7,7 @@
 #include "FormMain.hpp"
 #include "moc/Scene.hpp"
 #include "utils/Define.hpp"
-#include "utils/InputManager.hpp"
+#include "utils/InputHandler.hpp"
 #include "utils/PrintMethods.hpp"
 
 #include <QColorDialog>
@@ -19,7 +19,7 @@ class FormDraw::PushButtonIcon: public QPushButton {
   Q_OBJECT
 
 public:
-  std::unique_ptr<draw::methods::Base> method{};
+  std::unique_ptr<draw::method::Base> method{};
 };
 
 FormDraw::~FormDraw()
@@ -40,21 +40,21 @@ FormDraw::~FormDraw()
 FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
     : QWidget(parent, f)
     , ui(new Ui::FormDraw)
-    , paintManager(new PainterManager)
+    , handler(new DrawHandler)
 {
   QSettings settings= FormMain::getGlobalQSetting();
   color             = settings.value(TO_LITERAL_STRING(color), QColor(Qt::yellow)).value<QColor>();
 
   ui->setupUi(this);
-  assert(ui->toolBox->count() == draw::methods::Base::Type::max_value + 1);
+  assert(ui->toolBox->count() == draw::method::Base::Type::max_value + 1);
 
-  QVBoxLayout *layouts[draw::methods::Base::Type::max_value + 1];
+  QVBoxLayout *layouts[draw::method::Base::Type::max_value + 1];
   for (auto &la : layouts)
     la= new QVBoxLayout;
-  for (auto const id : draw::methods::allId) {
+  for (auto const id : draw::method::allId) {
     auto const but= new PushButtonIcon;
     but->setCheckable(true);
-    but->method.reset(static_cast<draw::methods::Base *>(QMetaType::create(id)));
+    but->method.reset(static_cast<draw::method::Base *>(QMetaType::create(id)));
     QObject::connect(
         but,
         &QPushButton::pressed,
@@ -64,7 +64,7 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
           auto const sendB= qobject_cast<PushButtonIcon *>(sender());
           if (buttonActive == sendB) {
             buttonActive        = nullptr;
-            paintManager->method= nullptr;
+            handler->method= nullptr;
           } else {
             if (buttonActive) {
               buttonActive->setChecked(false);
@@ -72,12 +72,12 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
             } else {
               buttonActive= sendB;
             }
-            paintManager->method= buttonActive->method.get();
+            handler->method= buttonActive->method.get();
           }
         });
     layouts[but->method->type()]->addWidget(but);
   }
-  for (size_t i{}; i < draw::methods::Base::Type::max_value + 1; ++i) {
+  for (size_t i{}; i < draw::method::Base::Type::max_value + 1; ++i) {
     layouts[i]->addStretch();
     layouts[i]->setMargin(this->layout()->margin());
     layouts[i]->setSpacing(this->layout()->spacing());
@@ -128,7 +128,7 @@ void FormDraw::sceneNew()
 {
   assert(!sceneActive);
   sceneActive             = new Scene;
-  sceneActive->managerWeak= paintManager;
+  sceneActive->managerWeak= handler;
 
   ui->graphicsView->setScene(sceneActive);
 }

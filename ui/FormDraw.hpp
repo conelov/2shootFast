@@ -11,7 +11,7 @@ namespace Ui
 {
 class FormDraw;
 }
-class PainterManager;
+class DrawHandler;
 class Scene;
 
 class FormDraw final: public QWidget {
@@ -21,7 +21,7 @@ class FormDraw final: public QWidget {
   QScopedPointer<Ui::FormDraw> ui;
 
   Scene *sceneActive{};
-  std::shared_ptr<PainterManager> paintManager{};
+  std::shared_ptr<DrawHandler> handler{};
   QColor color;
 
   class PushButtonIcon;

@@ -4,7 +4,7 @@
 
 #include "Scene.hpp"
 #include "utils/Define.hpp"
-#include "utils/InputManager.hpp"
+#include "utils/InputHandler.hpp"
 
 Scene::~Scene()= default;
 Scene::Scene(QObject *parent)

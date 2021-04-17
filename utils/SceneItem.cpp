@@ -5,10 +5,10 @@
 #include "PrintMethods.hpp"
 
 SceneItem::~SceneItem()= default;
-SceneItem::SceneItem(draw::methods::Base const *method, QRectF bound, QGraphicsItem *parent)
+SceneItem::SceneItem(draw::method::Base const *method, QRectF bound, QGraphicsItem *parent)
     : QGraphicsItem(parent)
     , _boundRect(bound)
-    , drawMethod(static_cast<draw::methods::Base *>(QMetaType::create(method->id(), method)))
+    , drawMethod(static_cast<draw::method::Base *>(QMetaType::create(method->id(), method)))
 {}
 QRectF SceneItem::boundingRect() const
 {

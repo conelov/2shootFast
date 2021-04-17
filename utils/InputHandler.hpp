@@ -2,35 +2,36 @@
 // Created by dym on 15.04.2021.
 //
 
-#ifndef INC_2SHOOT_INPUTMANAGER_HPP
-#define INC_2SHOOT_INPUTMANAGER_HPP
+#ifndef INC_2SHOOT_INPUTHANDLER_HPP
+#define INC_2SHOOT_INPUTHANDLER_HPP
 #include <memory>
 class Scene;
 class QGraphicsSceneMouseEvent;
-namespace draw::methods{
+namespace draw::method
+{
 class Base;
 }
 
-struct InputManagerBase
+struct InputHandlerBase
 {
-  virtual ~InputManagerBase();
+  virtual ~InputHandlerBase();
   virtual void mousePressEvent(Scene *, QGraphicsSceneMouseEvent *event)  = 0;
   virtual void mouseReleaseEvent(Scene *, QGraphicsSceneMouseEvent *event)= 0;
   virtual void mouseMoveEvent(Scene *, QGraphicsSceneMouseEvent *event)   = 0;
 };
 
-class PainterManager: public InputManagerBase {
+class DrawHandler: public InputHandlerBase {
   struct PainterPath;
   std::unique_ptr<PainterPath> path;
 
 public:
-  draw::methods::Base const * method{};
+  draw::method::Base const * method{};
 
-  ~PainterManager() override;
-  PainterManager();
+  ~DrawHandler() override;
+  DrawHandler();
   void mousePressEvent(Scene *, QGraphicsSceneMouseEvent *event) override;
   void mouseMoveEvent(Scene *, QGraphicsSceneMouseEvent *event) override;
   void mouseReleaseEvent(Scene *, QGraphicsSceneMouseEvent *event) override;
 };
 
-#endif // INC_2SHOOT_INPUTMANAGER_HPP
+#endif // INC_2SHOOT_INPUTHANDLER_HPP

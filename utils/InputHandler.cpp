@@ -1,24 +1,24 @@
 //
 // Created by dym on 15.04.2021.
 //
-#include "InputManager.hpp"
+#include "InputHandler.hpp"
 #include "PrintMethods.hpp"
 #include "SceneItem.hpp"
 #include "moc/Scene.hpp"
 #include <QColor>
 #include <QGraphicsSceneMouseEvent>
 
-InputManagerBase::~InputManagerBase()= default;
+InputHandlerBase::~InputHandlerBase()= default;
 
-struct PainterManager::PainterPath
+struct DrawHandler::PainterPath
 {
   QPointF begin;
   SceneItem *item;
 };
 
-PainterManager::~PainterManager()= default;
-PainterManager::PainterManager() = default;
-void PainterManager::mousePressEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
+DrawHandler::~DrawHandler()= default;
+DrawHandler::DrawHandler() = default;
+void DrawHandler::mousePressEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
 {
   if (!method)
     return;
@@ -26,7 +26,7 @@ void PainterManager::mousePressEvent(Scene *scene, QGraphicsSceneMouseEvent *eve
   path.reset(new PainterPath{ event->scenePos(), new SceneItem(method, { event->scenePos(), event->scenePos() }) });
   scene->addItem(path->item);
 }
-void PainterManager::mouseMoveEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
+void DrawHandler::mouseMoveEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
 {
   if (!method)
     return;
@@ -37,7 +37,7 @@ void PainterManager::mouseMoveEvent(Scene *scene, QGraphicsSceneMouseEvent *even
   //  scene->update(rectItemNew);
   //  scene->update(rectItemPrev);
 }
-void PainterManager::mouseReleaseEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
+void DrawHandler::mouseReleaseEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
 {
   if (!method)
     return;
