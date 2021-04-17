@@ -25,6 +25,7 @@ void DrawHandler::mousePressEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
   assert(!path);
   path.reset(new PainterPath{ event->scenePos(), new SceneItem(method, { event->scenePos(), event->scenePos() }) });
   scene->addItem(path->item);
+  scene->userItems.push_back(path->item);
 }
 void DrawHandler::mouseMoveEvent(Scene *scene, QGraphicsSceneMouseEvent *event)
 {

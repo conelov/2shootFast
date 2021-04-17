@@ -4,13 +4,13 @@
 
 #ifndef INC_2SHOOT_PRINTMETHODS_HPP
 #define INC_2SHOOT_PRINTMETHODS_HPP
-#include <QMetaType>
-#include <memory>
-#include <QPen>
 #include <QBrush>
+#include <QMetaType>
+#include <QPen>
+#include <memory>
 class QPainter;
 
-namespace draw::method
+namespace draw
 {
 class Base {
 public:
@@ -20,37 +20,38 @@ public:
     player,
     max_value= player
   };
-  //
-  //  std::unique_ptr<QPen> pen{};
-  //  std::unique_ptr<QBrush> brush{};
+  using TypeUnderlying= std::underlying_type_t<Type>;
 
   QPen pen{};
   QBrush brush{};
 
   virtual ~Base()                                          = default;
-  virtual int id() const                                          = 0;
-  virtual Type type() const                                       = 0;
+  virtual int id() const                                   = 0;
+  virtual Type type() const                                = 0;
   virtual void paint(QPainter *painter, QRectF bound) const= 0;
+
+  friend QDataStream &operator<<(QDataStream &stream, Base const *method);
+  friend QDataStream &operator>>(QDataStream &stream, Base *&method);
 };
 
 class Filling: public Base {
 public:
-  Type type() const  override;
+  Type type() const override;
 };
 
 class Player: public Base {
 public:
-  Type type() const  override;
+  Type type() const override;
 };
 
 class Line;
 class Rectangle;
 class Circle;
-} // namespace draw::methods
-Q_DECLARE_METATYPE(draw::method::Line)
-Q_DECLARE_METATYPE(draw::method::Rectangle)
-Q_DECLARE_METATYPE(draw::method::Circle)
-namespace draw::method
+} // namespace draw
+Q_DECLARE_METATYPE(draw::Line)
+Q_DECLARE_METATYPE(draw::Rectangle)
+Q_DECLARE_METATYPE(draw::Circle)
+namespace draw
 {
 class Line: public Filling {
 public:
@@ -68,7 +69,9 @@ public:
   void paint(QPainter *painter, QRectF bound) const override;
 };
 
-const int allId[]{ qMetaTypeId<Line>(), qMetaTypeId<Rectangle>(), qMetaTypeId<Circle>() };
+const std::invoke_result_t<decltype(&Base::id), Base> allId[]{ qMetaTypeId<Line>(),
+                                                               qMetaTypeId<Rectangle>(),
+                                                               qMetaTypeId<Circle>() };
 constexpr auto allIdCount= sizeof(allId) / sizeof(allId[0]);
-} // namespace draw::methods
+} // namespace draw
 #endif // INC_2SHOOT_PRINTMETHODS_HPP

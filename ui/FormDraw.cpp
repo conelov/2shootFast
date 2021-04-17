@@ -11,6 +11,8 @@
 #include "utils/PrintMethods.hpp"
 
 #include <QColorDialog>
+#include <QDataStream>
+#include <QFile>
 #include <QVBoxLayout>
 
 #include <QDebug>
@@ -19,7 +21,7 @@ class FormDraw::PushButtonIcon: public QPushButton {
   Q_OBJECT
 
 public:
-  std::unique_ptr<draw::method::Base> method{};
+  std::unique_ptr<draw::Base> method{};
 };
 
 FormDraw::~FormDraw()
@@ -46,15 +48,15 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
   color             = settings.value(TO_LITERAL_STRING(color), QColor(Qt::yellow)).value<QColor>();
 
   ui->setupUi(this);
-  assert(ui->toolBox->count() == draw::method::Base::Type::max_value + 1);
+  assert(ui->toolBox->count() == draw::Base::Type::max_value + 1);
 
-  QVBoxLayout *layouts[draw::method::Base::Type::max_value + 1];
+  QVBoxLayout *layouts[draw::Base::Type::max_value + 1];
   for (auto &la : layouts)
     la= new QVBoxLayout;
-  for (auto const id : draw::method::allId) {
+  for (auto const id : draw::allId) {
     auto const but= new PushButtonIcon;
     but->setCheckable(true);
-    but->method.reset(static_cast<draw::method::Base *>(QMetaType::create(id)));
+    but->method.reset(static_cast<draw::Base *>(QMetaType::create(id)));
     QObject::connect(
         but,
         &QPushButton::pressed,
@@ -63,7 +65,7 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
         {
           auto const sendB= qobject_cast<PushButtonIcon *>(sender());
           if (buttonActive == sendB) {
-            buttonActive        = nullptr;
+            buttonActive   = nullptr;
             handler->method= nullptr;
           } else {
             if (buttonActive) {
@@ -77,7 +79,7 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
         });
     layouts[but->method->type()]->addWidget(but);
   }
-  for (size_t i{}; i < draw::method::Base::Type::max_value + 1; ++i) {
+  for (size_t i{}; i < draw::Base::Type::max_value + 1; ++i) {
     layouts[i]->addStretch();
     layouts[i]->setMargin(this->layout()->margin());
     layouts[i]->setSpacing(this->layout()->spacing());
@@ -95,13 +97,14 @@ FormDraw::FormDraw(QWidget *parent, Qt::WindowFlags f)
       });
 
   QObject::connect(ui->pushButton_sceneNew, &QPushButton::pressed, this, &FormDraw::sceneNew);
+  QObject::connect(ui->pushButton_sceneLoad, &QPushButton::pressed, this, &FormDraw::sceneLoad);
+  QObject::connect(ui->pushButton_sceneSave, &QPushButton::pressed, this, &FormDraw::sceneSafe);
 
   colorChange();
 
-  if (auto const setId = settings.value("buttonActiveId", -1).value<int>();
-      setId != -1) {
-    auto const list = allToolButton();
-    auto const activeBIt =  std::ranges::find_if(list,[setId](PushButtonIcon * i){ return i->method->id() == setId; });
+  if (auto const setId= settings.value("buttonActiveId", -1).value<int>(); setId != -1) {
+    auto const list     = allToolButton();
+    auto const activeBIt= std::ranges::find_if(list, [setId](PushButtonIcon *i) { return i->method->id() == setId; });
     assert(activeBIt != list.end());
     (*activeBIt)->click();
   }
@@ -127,11 +130,41 @@ void FormDraw::colorChange()
 void FormDraw::sceneNew()
 {
   assert(!sceneActive);
-  sceneActive             = new Scene;
-  sceneActive->managerWeak= handler;
+  sceneActive             = new Scene(Scene::defaultBorders());
+  sceneActive->handlerWeak= handler;
 
   ui->graphicsView->setScene(sceneActive);
 }
+void FormDraw::sceneLoad()
+{
+  assert(!sceneActive);
+  {
+    QFile file(ui->lineEdit_title->text() + "_scene.txt");
+    if (!file.open(QIODevice::ReadOnly))
+      assert(false);
+    QByteArray buffer= file.readAll();
+    QDataStream stream(&buffer, QIODevice::ReadOnly);
+    sceneActive             = new Scene;
+    sceneActive->handlerWeak= handler;
+    stream >> *sceneActive;
+  }
+  ui->graphicsView->setScene(sceneActive);
+}
+void FormDraw::sceneSafe()
+{
+  assert(sceneActive);
+
+  QByteArray buffer;
+  {
+    QDataStream stream(&buffer, QIODevice::WriteOnly);
+    stream << *sceneActive;
+  }
+  QFile file(ui->lineEdit_title->text() + "_scene.txt");
+  if (!file.open(QIODevice::WriteOnly))
+    assert(false);
+  file.write(buffer);
+}
+
 QList<FormDraw::PushButtonIcon *> FormDraw::allToolButton()
 {
   QList<FormDraw::PushButtonIcon *> ret;

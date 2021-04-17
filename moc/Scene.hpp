@@ -9,15 +9,27 @@
 class InputHandlerBase;
 class SceneItem;
 
-class Scene : public QGraphicsScene{
+class Scene: public QGraphicsScene {
   Q_OBJECT
 
-  std::vector<SceneItem *> userItems;
+  QPolygon borderPolygon;
+  std::vector<QGraphicsLineItem *> borderLine;
+
 public:
-  std::weak_ptr<InputHandlerBase> managerWeak{};
+  std::vector<SceneItem *> userItems;
+  std::weak_ptr<InputHandlerBase> handlerWeak{};
+
+  static QPolygon defaultBorders();
 
   ~Scene() override;
-  Scene(QObject *parent = {});
+  Scene();
+  Scene(QPolygon borders, QObject *parent= {});
+
+  friend QDataStream &operator<<(QDataStream &stream, Scene const &scene);
+  friend QDataStream &operator>>(QDataStream &stream, Scene &scene);
+
+private:
+  void constructBorderLine();
 
 protected:
   void mousePressEvent(QGraphicsSceneMouseEvent *event) override;

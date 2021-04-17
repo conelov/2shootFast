@@ -7,7 +7,7 @@
 #include <memory>
 class Scene;
 class QGraphicsSceneMouseEvent;
-namespace draw::method
+namespace draw
 {
 class Base;
 }
@@ -25,7 +25,7 @@ class DrawHandler: public InputHandlerBase {
   std::unique_ptr<PainterPath> path;
 
 public:
-  draw::method::Base const * method{};
+  draw::Base const *method{};
 
   ~DrawHandler() override;
   DrawHandler();

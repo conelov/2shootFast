@@ -7,7 +7,7 @@
 #include <QGraphicsItem>
 #include <memory>
 
-namespace draw::method
+namespace draw
 {
 class Base;
 }
@@ -15,13 +15,18 @@ class Base;
 class SceneItem: public QGraphicsItem {
 
   QRectF _boundRect;
-  const std::unique_ptr<const draw::method::Base> drawMethod;
+  std::unique_ptr<const draw::Base> drawMethod;
+
+  SceneItem();
+
 public:
   ~SceneItem() override;
-  SceneItem(draw::method::Base const *method,  QRectF bound, QGraphicsItem *parent= {});
+  SceneItem(draw::Base const *method, QRectF bound, QGraphicsItem *parent= {});
   QRectF boundingRect() const override;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
   void resize(QRectF rectNew);
+  friend QDataStream &operator<<(QDataStream &stream, SceneItem const *item);
+  friend QDataStream &operator>>(QDataStream &stream, SceneItem *&item);
 };
 
 #endif // INC_2SHOOT_SCENEITEM_HPP

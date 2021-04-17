@@ -18,13 +18,12 @@ class FormMain final: public QMainWindow {
 
   const QScopedPointer<Ui::FormMain> ui;
   std::vector<std::unique_ptr<QGraphicsScene>> sceneActive;
+
 public:
   static QSettings getGlobalQSetting();
 
   ~FormMain() override;
   FormMain(QWidget *parent= {}, Qt::WindowFlags flags= {});
-
-
 };
 
 #endif // INC_2SHOOT_FORMMAIN_HPP

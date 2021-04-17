@@ -34,6 +34,8 @@ public:
 private:
   Q_SLOT void colorChange();
   Q_SLOT void sceneNew();
+  Q_SLOT void sceneLoad();
+  Q_SLOT void sceneSafe();
 
   QList<PushButtonIcon *> allToolButton();
 };
