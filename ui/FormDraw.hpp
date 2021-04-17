@@ -4,7 +4,6 @@
 
 #ifndef INC_2SHOOT_FORMDRAW_HPP
 #define INC_2SHOOT_FORMDRAW_HPP
-#include "utils/Define.hpp"
 #include <QWidget>
 #include <memory>
 
@@ -12,13 +11,8 @@ namespace Ui
 {
 class FormDraw;
 }
-class QPushButton;
 class PainterManager;
 class Scene;
-namespace draw
-{
-class Painter;
-} // namespace draw
 
 class FormDraw final: public QWidget {
   Q_OBJECT
@@ -27,12 +21,11 @@ class FormDraw final: public QWidget {
   QScopedPointer<Ui::FormDraw> ui;
 
   Scene *sceneActive{};
-  std::shared_ptr<PainterManager> paintManager;
+  std::shared_ptr<PainterManager> paintManager{};
   QColor color;
 
-  QPushButton *buttonActive{};
-  using ButtonPainterPair= std::pair<QPushButton *, std::unique_ptr<draw::Painter>>;
-  std::vector<ButtonPainterPair> buttons[draw::paintersCount];
+  class PushButtonIcon;
+  PushButtonIcon *buttonActive{};
 
 public:
   ~FormDraw() override;
@@ -41,6 +34,8 @@ public:
 private:
   Q_SLOT void colorChange();
   Q_SLOT void sceneNew();
+
+  QList<PushButtonIcon *> allToolButton();
 };
 
 #endif // INC_2SHOOT_FORMDRAW_HPP

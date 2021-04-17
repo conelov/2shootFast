@@ -5,12 +5,11 @@
 #ifndef INC_2SHOOT_INPUTMANAGER_HPP
 #define INC_2SHOOT_INPUTMANAGER_HPP
 #include <memory>
-namespace draw
-{
-class Painter;
-} // namespace draw
 class Scene;
 class QGraphicsSceneMouseEvent;
+namespace draw::methods{
+class Base;
+}
 
 struct InputManagerBase
 {
@@ -25,7 +24,7 @@ class PainterManager: public InputManagerBase {
   std::unique_ptr<PainterPath> path;
 
 public:
-  draw::Painter const *painter{};
+  draw::methods::Base const * method{};
 
   ~PainterManager() override;
   PainterManager();

@@ -7,18 +7,18 @@
 #include <QGraphicsItem>
 #include <memory>
 
-namespace draw
+namespace draw::methods
 {
-class Painter;
+class Base;
 }
 
 class SceneItem: public QGraphicsItem {
 
   QRectF _boundRect;
-  const std::unique_ptr<const draw::Painter> drawMethod;
+  const std::unique_ptr<const draw::methods::Base> drawMethod;
 public:
   ~SceneItem() override;
-  SceneItem(draw::Painter const &method,  QRectF bound, QGraphicsItem *parent= {});
+  SceneItem(draw::methods::Base const *method,  QRectF bound, QGraphicsItem *parent= {});
   QRectF boundingRect() const override;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
   void resize(QRectF rectNew);

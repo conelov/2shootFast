@@ -7,25 +7,18 @@
 #include <QMainWindow>
 #include <QSettings>
 #include <memory>
-
-class QGraphicsScene;
-
 namespace Ui
 {
 class FormMain;
 }
-namespace draw
-{
-class Methods;
-}
+class QGraphicsScene;
+
 class FormMain final: public QMainWindow {
   Q_OBJECT
 
   const QScopedPointer<Ui::FormMain> ui;
   std::vector<std::unique_ptr<QGraphicsScene>> sceneActive;
 public:
-  const QScopedPointer<const draw::Methods> methods;
-
   static QSettings getGlobalQSetting();
 
   ~FormMain() override;

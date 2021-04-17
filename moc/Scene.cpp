@@ -3,8 +3,8 @@
 //
 
 #include "Scene.hpp"
+#include "utils/Define.hpp"
 #include "utils/InputManager.hpp"
-#include <ch_utilities.h>
 
 Scene::~Scene()= default;
 Scene::Scene(QObject *parent)
@@ -12,7 +12,7 @@ Scene::Scene(QObject *parent)
 {}
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-  const ch::InvokeOnDestruct exEvent([this, event] { QGraphicsScene::mousePressEvent(event); });
+  const InvokeOnDestruct exEvent([this, event] { QGraphicsScene::mousePressEvent(event); });
   if (managerWeak.expired())
     return;
   auto const manager= managerWeak.lock();
@@ -20,7 +20,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 }
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-  const ch::InvokeOnDestruct exEvent([this, event] { QGraphicsScene::mousePressEvent(event); });
+  const InvokeOnDestruct exEvent([this, event] { QGraphicsScene::mousePressEvent(event); });
   if (managerWeak.expired())
     return;
   auto const manager= managerWeak.lock();
@@ -28,7 +28,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 }
 void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-  const ch::InvokeOnDestruct exEvent([this, event] { QGraphicsScene::mousePressEvent(event); });
+  const InvokeOnDestruct exEvent([this, event] { QGraphicsScene::mousePressEvent(event); });
   if (managerWeak.expired())
     return;
   auto const manager= managerWeak.lock();

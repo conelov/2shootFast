@@ -3,7 +3,6 @@
 //
 #include "FormMain.hpp"
 #include "ui_FormMain.h"
-#include "utils/Paint.hpp"
 #include <QGraphicsScene>
 
 QSettings FormMain::getGlobalQSetting()
@@ -19,7 +18,6 @@ FormMain::~FormMain()= default;
 FormMain::FormMain(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
     , ui(new Ui::FormMain)
-    , methods(new draw::Methods)
 {
   ui->setupUi(this);
 

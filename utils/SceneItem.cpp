@@ -2,13 +2,13 @@
 // Created by dym on 15.04.2021.
 //
 #include "SceneItem.hpp"
-#include "Paint.hpp"
+#include "PrintMethods.hpp"
 
 SceneItem::~SceneItem()= default;
-SceneItem::SceneItem(draw::Painter const &method, QRectF bound, QGraphicsItem *parent)
+SceneItem::SceneItem(draw::methods::Base const *method, QRectF bound, QGraphicsItem *parent)
     : QGraphicsItem(parent)
     , _boundRect(bound)
-    , drawMethod(new draw::Painter(method))
+    , drawMethod(static_cast<draw::methods::Base *>(QMetaType::create(method->id(), method)))
 {}
 QRectF SceneItem::boundingRect() const
 {
